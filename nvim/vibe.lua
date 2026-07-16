@@ -7,6 +7,15 @@ vim.opt.linebreak = true
 vim.opt.breakindent = true
 vim.opt.swapfile = false
 vim.opt.updatetime = 300
+local compact_ui = vim.env.VIBE_COMPACT_UI ~= "0"
+vim.opt.laststatus = compact_ui and 0 or 2
+if compact_ui then
+  vim.opt.ruler = false
+  vim.opt.showmode = false
+  if vim.fn.exists("+cmdheight") == 1 then
+    vim.opt.cmdheight = 0
+  end
+end
 
 local palette = {
   background = "#141729",

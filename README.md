@@ -83,6 +83,7 @@ Set defaults with environment variables:
 ```sh
 export VIBE_AGENT=claude
 export VIBE_EDITOR=nano
+export VIBE_COMPACT_UI=0  # restore native Codex/Neovim status bars
 ```
 
 Set these variables before running the installer too; validation and automatic

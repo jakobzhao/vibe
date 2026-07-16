@@ -146,10 +146,18 @@ fi
 
 AGENTS=${AGENTS:-${VIBE_AGENT:-codex}}
 VIBE_EDITOR=${VIBE_EDITOR:-nvim}
+VIBE_COMPACT_UI=${VIBE_COMPACT_UI:-1}
 case "$VIBE_EDITOR" in
   nvim|nano) ;;
   *)
     printf 'vibe: unsupported VIBE_EDITOR: %s (use nvim or nano)\n' "$VIBE_EDITOR" >&2
+    exit 2
+    ;;
+esac
+case "$VIBE_COMPACT_UI" in
+  0|1) ;;
+  *)
+    printf 'vibe: unsupported VIBE_COMPACT_UI: %s (use 0 or 1)\n' "$VIBE_COMPACT_UI" >&2
     exit 2
     ;;
 esac
@@ -204,6 +212,7 @@ tmux set-environment -t "$SESSION" VIBE_NVIM_SOCKET "$SOCKET"
 tmux set-environment -t "$SESSION" VIBE_MAIN_PANE "$MAIN_PANE"
 tmux set-environment -t "$SESSION" VIBE_DIRECTORY_PANE "$DIR_PANE"
 tmux set-environment -t "$SESSION" VIBE_EDITOR "$VIBE_EDITOR"
+tmux set-environment -t "$SESSION" VIBE_COMPACT_UI "$VIBE_COMPACT_UI"
 tmux set-environment -t "$SESSION" YAZI_CONFIG_HOME "$VIBE_ROOT/yazi"
 tmux set-environment -t "$SESSION" EDITOR "$VIBE_BIN_DIR/vibe-open"
 tmux set-environment -t "$SESSION" VIBE_PROJECT_DIR "$DIR"
@@ -247,6 +256,9 @@ while IFS= read -r AGENT; do
   case "$LABEL" in
     codex)
       AGENT="$AGENT -c tui.animations=false -c tui.show_tooltips=false"
+      if [ "$VIBE_COMPACT_UI" = 1 ]; then
+        AGENT="$AGENT -c 'tui.status_line=[]'"
+      fi
       ;;
   esac
   tmux respawn-pane -k -t "$PANE" -c "$DIR" "$AGENT"
