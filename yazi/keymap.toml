@@ -1,0 +1,19 @@
+[[mgr.prepend_keymap]]
+on = [ "f" ]
+run = "plugin vibe-favorites toggle"
+desc = "Show/hide Favorites"
+
+[[mgr.prepend_keymap]]
+on = "<Enter>"
+run = "plugin vibe-open"
+desc = "Enter directory or open file in Main"
+
+[[mgr.prepend_keymap]]
+on = [ "b", "a" ]
+run = "plugin vibe-favorites add"
+desc = "Add hovered item to Favorites"
+
+[[mgr.prepend_keymap]]
+on = [ "b", "d" ]
+run = "plugin vibe-favorites remove"
+desc = "Remove hovered item from Favorites"

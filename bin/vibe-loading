@@ -1,0 +1,50 @@
+#!/usr/bin/env sh
+set -eu
+
+SESSION=${1:?vibe-loading: session is not set}
+FRAMES='|/-\\'
+INDEX=0
+# This animation is only a startup nicety.  Keep its timeout independent from
+# vibe-ready so a crashed/reaped readiness poller can never lock the user out.
+MAX_FRAMES=${VIBE_LOADING_MAX_FRAMES:-1100}
+
+cleanup() {
+  printf '\033[?25h'
+}
+trap cleanup EXIT HUP INT TERM
+
+printf '\033[?25l'
+while tmux has-session -t "=$SESSION" 2>/dev/null; do
+  READY=$(tmux show-option -qv -t "$SESSION" @vibe_ready 2>/dev/null || true)
+  [ "$READY" = 1 ] && break
+  if [ "$INDEX" -ge "$MAX_FRAMES" ]; then
+    tmux set-option -t "$SESSION" @vibe_ready 1 2>/dev/null || true
+    break
+  fi
+
+  PANE_SIZE=$(tmux display-message -p -t "${TMUX_PANE:-$SESSION:loading}" \
+    '#{pane_width} #{pane_height}' 2>/dev/null || true)
+  COLS=${PANE_SIZE%% *}
+  LINES=${PANE_SIZE#* }
+  case "$COLS" in ''|*[!0-9]*) COLS=$(tput cols 2>/dev/null || printf 80) ;; esac
+  case "$LINES" in ''|*[!0-9]*) LINES=$(tput lines 2>/dev/null || printf 24) ;; esac
+  TITLE='V I B E'
+  MESSAGE='Loading workspace'
+  # Center the three-row composition, not just its first line.
+  ROW=$(((LINES - 3) / 2 + 1))
+  [ "$ROW" -gt 0 ] || ROW=1
+  TITLE_COL=$(((COLS - ${#TITLE}) / 2 + 1))
+  MESSAGE_COL=$(((COLS - ${#MESSAGE} - 2) / 2 + 1))
+  [ "$TITLE_COL" -gt 0 ] || TITLE_COL=1
+  [ "$MESSAGE_COL" -gt 0 ] || MESSAGE_COL=1
+  FRAME=$(printf '%s' "$FRAMES" | cut -c $((INDEX % 4 + 1)))
+
+  printf '\033[2J\033[H\033[%s;%sH\033[1;32m%s\033[0m' "$ROW" "$TITLE_COL" "$TITLE"
+  printf '\033[%s;%sH\033[90m%s %s\033[0m' "$((ROW + 2))" "$MESSAGE_COL" "$MESSAGE" "$FRAME"
+  INDEX=$((INDEX + 1))
+  sleep 0.12
+done
+
+tmux has-session -t "=$SESSION" 2>/dev/null || exit 0
+tmux select-window -t "$SESSION:cockpit"
+tmux kill-window -t "$SESSION:loading"

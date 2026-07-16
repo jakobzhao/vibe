@@ -1,0 +1,12 @@
+[[plugin.deps]]
+use = "dedukun/bookmarks"
+rev = "9ef1254"
+hash = "92fbb5483657fa7976cdf4e0104e18e0"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:no-status"
+rev = "bb758e2"
+hash = "3e023d31f29201efdac2a6ae35fedb78"
+
+[flavor]
+deps = []

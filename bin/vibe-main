@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+set -eu
+
+EDITOR_MODE=${VIBE_EDITOR:-nvim}
+
+if [ "$EDITOR_MODE" = nano ]; then
+  printf '\n  V I B E   M A I N  ·  Nano mode\n\n'
+  printf '  Choose a file in Directory, then press Enter.\n'
+  printf '  Exit Nano with Ctrl-X before opening another file.\n\n'
+  exec "${SHELL:-/bin/sh}"
+fi
+
+SOCKET=${VIBE_NVIM_SOCKET:?vibe-main: VIBE_NVIM_SOCKET is not set}
+
+resolve_script_dir() {
+  SOURCE=$1
+  while [ -L "$SOURCE" ]; do
+    BASE=$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd -P)
+    SOURCE=$(readlink "$SOURCE")
+    case "$SOURCE" in
+      /*) ;;
+      *) SOURCE="$BASE/$SOURCE" ;;
+    esac
+  done
+  CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd -P
+}
+
+BIN_DIR=$(resolve_script_dir "$0")
+CONFIG=${VIBE_NVIM_CONFIG:-$(CDPATH= cd -- "$BIN_DIR/../nvim" && pwd -P)/vibe.lua}
+
+rm -f "$SOCKET"
+exec nvim --listen "$SOCKET" -u "$CONFIG"

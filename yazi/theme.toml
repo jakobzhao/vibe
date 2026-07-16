@@ -1,0 +1,94 @@
+# Termius Dark palette, matched to the active Ghostty profile.
+[app]
+overall = { bg = "#141729" }
+
+[mgr]
+cwd = { fg = "#21b568", bold = true }
+find_keyword = { fg = "#141729", bg = "#3ed7be", bold = true }
+find_position = { fg = "#8d91a5" }
+symlink_target = { fg = "#3ed7be", italic = true }
+marker_copied = { fg = "#21b568", bg = "#21b568" }
+marker_cut = { fg = "#141729", bg = "#f24e50" }
+marker_marked = { fg = "#141729", bg = "#eca855" }
+marker_selected = { fg = "#141729", bg = "#21b568" }
+count_copied = { fg = "#141729", bg = "#21b568" }
+count_cut = { fg = "#141729", bg = "#f24e50" }
+count_selected = { fg = "#141729", bg = "#3ed7be" }
+border_symbol = "│"
+border_style = { fg = "#343851" }
+
+[indicator]
+parent = { fg = "#8d91a5", bg = "#141729" }
+current = { fg = "#21b568", bg = "#1b6649", bold = true }
+preview = { fg = "#3ed7be", bg = "#141729" }
+
+[tabs]
+active = { fg = "#141729", bg = "#21b568", bold = true }
+inactive = { fg = "#8d91a5", bg = "#141729" }
+
+[mode]
+normal_main = { fg = "#141729", bg = "#21b568", bold = true }
+normal_alt = { fg = "#e2e3e8", bg = "#343851" }
+select_main = { fg = "#141729", bg = "#3ed7be", bold = true }
+select_alt = { fg = "#e2e3e8", bg = "#343851" }
+unset_main = { fg = "#141729", bg = "#eca855", bold = true }
+unset_alt = { fg = "#e2e3e8", bg = "#343851" }
+
+[status]
+overall = { fg = "#e2e3e8", bg = "#141729" }
+perm_type = { fg = "#21b568" }
+perm_read = { fg = "#3ed7be" }
+perm_write = { fg = "#eca855" }
+perm_exec = { fg = "#21b568" }
+perm_sep = { fg = "#343851" }
+progress_label = { fg = "#141729", bg = "#21b568", bold = true }
+progress_normal = { fg = "#21b568", bg = "#343851" }
+progress_error = { fg = "#141729", bg = "#f24e50" }
+
+[which]
+mask = { bg = "#141729" }
+cand = { fg = "#3ed7be", bold = true }
+rest = { fg = "#8d91a5" }
+desc = { fg = "#e2e3e8" }
+separator = "  ·  "
+separator_style = { fg = "#343851" }
+
+[confirm]
+border = { fg = "#21b568" }
+title = { fg = "#21b568", bold = true }
+body = { fg = "#e2e3e8" }
+list = { fg = "#8d91a5" }
+btn_yes = { fg = "#141729", bg = "#21b568", bold = true }
+btn_no = { fg = "#e2e3e8", bg = "#343851" }
+
+[input]
+border = { fg = "#21b568" }
+title = { fg = "#21b568", bold = true }
+value = { fg = "#e2e3e8" }
+selected = { fg = "#e2e3e8", bg = "#1b6649" }
+
+[help]
+on = { fg = "#3ed7be", bold = true }
+run = { fg = "#21b568" }
+desc = { fg = "#8d91a5" }
+hovered = { fg = "#141729", bg = "#21b568", bold = true }
+footer = { fg = "#e2e3e8", bg = "#343851" }
+
+# Override Yazi's blue-heavy defaults so the directory pane reads as one
+# Termius Dark surface. Keep semantic color only for exceptional file types.
+[filetype]
+rules = [
+	{ url = "*", is = "orphan", fg = "#f24e50", crossed = true },
+	{ url = "*", is = "link", fg = "#3ed7be" },
+	{ url = "*/", fg = "#21b568", bold = true },
+	{ mime = "{audio,video}/*", fg = "#ff7dc5" },
+	{ mime = "image/*", fg = "#fdc47d" },
+	{ mime = "application/{zip,gzip,x-tar,x-7z-compressed,x-rar}", fg = "#eca855" },
+	{ url = "*", is = "exec", fg = "#3ed7be" },
+	{ url = "*", fg = "#e2e3e8" },
+]
+
+[icon]
+prepend_globs = [
+	{ url = "*/", text = "", fg = "#21b568" },
+]

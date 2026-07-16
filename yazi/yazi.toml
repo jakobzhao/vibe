@@ -1,0 +1,29 @@
+[mgr]
+# Keep only the parent/current directory panes. The preview pane reads the
+# hovered file, which hydrates Google Drive Stream placeholders.
+ratio = [1, 3, 0]
+sort_by = "natural"
+show_hidden = false
+# Avoid resolving cloud-backed links such as ~/Dropbox while browsing locally.
+show_symlink = false
+scrolloff = 5
+mouse_events = ["click", "scroll", "touch", "move", "drag"]
+
+[preview]
+wrap = "yes"
+tab_size = 2
+
+# Cloud-safe browsing: do not inspect file contents merely to list a folder.
+# Fetchers determine MIME types by reading file bytes, which hydrates Google
+# Drive placeholders even when previews are hidden. Spotters, preloaders, and
+# previewers can also read file contents, so disable every automatic reader.
+[plugin]
+fetchers = []
+spotters = []
+previewers = []
+preloaders = []
+
+[[opener.edit]]
+run = "vibe-open %s"
+desc = "Open in Main"
+for = "unix"

@@ -1,0 +1,36 @@
+# Termius Dark, matched to the macOS Terminal profile used by Vibe.
+font-family = Fira Mono
+font-style = Regular
+font-size = 14
+adjust-cell-height = 2%
+
+window-theme = dark
+background-opacity = 1
+window-padding-x = 2
+window-padding-y = 2
+window-padding-color = background
+
+cursor-style = block
+cursor-style-blink = true
+
+background = #141729
+foreground = #21b568
+cursor-color = #21b568
+selection-background = #1b6649
+
+palette = 0=#343851
+palette = 1=#f24e50
+palette = 2=#008463
+palette = 3=#eca855
+palette = 4=#08639f
+palette = 5=#c13282
+palette = 6=#2091f6
+palette = 7=#e2e3e8
+palette = 8=#8d91a5
+palette = 9=#ff7375
+palette = 10=#3ed7be
+palette = 11=#fdc47d
+palette = 12=#6ba0c3
+palette = 13=#ff7dc5
+palette = 14=#44a7ff
+palette = 15=#ffffff

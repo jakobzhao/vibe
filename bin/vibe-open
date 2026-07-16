@@ -1,0 +1,48 @@
+#!/usr/bin/env sh
+set -eu
+
+SOCKET=${VIBE_NVIM_SOCKET:-}
+MAIN_PANE=${VIBE_MAIN_PANE:-}
+EDITOR_MODE=${VIBE_EDITOR:-nvim}
+
+shell_quote() {
+  printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
+[ "$#" -gt 0 ] || exit 0
+
+if [ "$EDITOR_MODE" = nano ]; then
+  if [ -z "$MAIN_PANE" ] || ! tmux display-message -p -t "$MAIN_PANE" '#{pane_id}' >/dev/null 2>&1; then
+    tmux display-message 'Main is not ready yet. Please try again in a moment.' 2>/dev/null || true
+    exit 1
+  fi
+
+  MAIN_COMMAND=$(tmux display-message -p -t "$MAIN_PANE" '#{pane_current_command}')
+  case "$MAIN_COMMAND" in
+    nano|pico)
+      tmux display-message 'Exit Nano with Ctrl-X before opening another file.' 2>/dev/null || true
+      exit 1
+      ;;
+  esac
+
+  COMMAND='nano --'
+  for FILE do
+    COMMAND="$COMMAND $(shell_quote "$FILE")"
+  done
+  tmux send-keys -t "$MAIN_PANE" -l "$COMMAND"
+  tmux send-keys -t "$MAIN_PANE" Enter
+  tmux set-option -p -t "$MAIN_PANE" @vibe_role "Main · $(basename "$1")"
+  tmux display-message -t "$MAIN_PANE" "Opened in Main: $(basename "$1")" 2>/dev/null || true
+  exit 0
+fi
+
+if [ -z "$SOCKET" ] || [ ! -S "$SOCKET" ]; then
+  tmux display-message 'Main is not ready yet. Please try again in a moment.' 2>/dev/null || true
+  exit 1
+fi
+
+nvim --server "$SOCKET" --remote "$@"
+
+if [ -n "$MAIN_PANE" ]; then
+  tmux display-message -t "$MAIN_PANE" "Opened in Main: $(basename "$1")" 2>/dev/null || true
+fi

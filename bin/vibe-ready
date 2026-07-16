@@ -1,0 +1,81 @@
+#!/usr/bin/env sh
+set -eu
+
+SESSION=${1:?vibe-ready: session is not set}
+SOCKET=${2:?vibe-ready: nvim socket is not set}
+DIRECTORY_PANE=${3:?vibe-ready: directory pane is not set}
+MAIN_PANE=${4:?vibe-ready: main pane is not set}
+shift 4
+
+reveal_cockpit() {
+  tmux has-session -t "=$SESSION" 2>/dev/null || return 0
+  tmux select-pane -t "$DIRECTORY_PANE" 2>/dev/null || true
+  tmux set-option -t "$SESSION" @vibe_ready 1 2>/dev/null || true
+}
+
+# Fail open: a readiness-check error must never strand the user on loading.
+trap reveal_cockpit EXIT HUP INT TERM
+
+pane_command() {
+  tmux display-message -p -t "$1" '#{pane_current_command}' 2>/dev/null || true
+}
+
+pane_ready() {
+  PANE=$1
+  LABEL=$2
+  COMMAND=$(pane_command "$PANE")
+  [ -n "$COMMAND" ] || return 1
+
+  case "$LABEL" in
+    codex)
+      # -J joins visually wrapped lines. The header appears before MCP startup
+      # finishes, so wait for the actual input prompt (or a trust prompt that
+      # requires user action) before revealing the cockpit.
+      OUTPUT=$(tmux capture-pane -pJ -t "$PANE" 2>/dev/null || true)
+      printf '%s\n' "$OUTPUT" |
+        grep -Eq '^[[:space:]]*›[[:space:]]|Do you trust the contents' || return 1
+      return 0
+      ;;
+    *)
+      case "$COMMAND" in
+        sh|bash|zsh|fish) return 1 ;;
+        *) return 0 ;;
+      esac
+      ;;
+  esac
+}
+
+# Bound startup waiting so one unusual third-party agent cannot strand the UI.
+TRIES=0
+STABLE=0
+while [ "$TRIES" -lt 1200 ]; do
+  READY=1
+  [ "$(pane_command "$DIRECTORY_PANE")" = yazi ] || READY=0
+  if [ "${VIBE_EDITOR:-nvim}" = nano ]; then
+    case "$(pane_command "$MAIN_PANE")" in
+      sh|bash|zsh|fish) ;;
+      *) READY=0 ;;
+    esac
+  else
+    [ -S "$SOCKET" ] || READY=0
+    [ "$(pane_command "$MAIN_PANE")" = nvim ] || READY=0
+  fi
+
+  for SPEC in "$@"; do
+    PANE=${SPEC%%:*}
+    LABEL=${SPEC#*:}
+    pane_ready "$PANE" "$LABEL" || READY=0
+  done
+
+  if [ "$READY" -eq 1 ]; then
+    STABLE=$((STABLE + 1))
+    [ "$STABLE" -ge 5 ] && break
+  else
+    STABLE=0
+  fi
+  TRIES=$((TRIES + 1))
+  sleep 0.1
+done
+
+reveal_cockpit
+trap - EXIT HUP INT TERM

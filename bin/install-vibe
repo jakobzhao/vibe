@@ -1,0 +1,305 @@
+#!/usr/bin/env sh
+set -eu
+
+usage() {
+  cat <<'EOF'
+Usage: install-vibe [OPTIONS]
+
+Install the portable Vibe terminal workspace on macOS or Linux.
+
+Options:
+  --check          Validate the machine without changing it.
+  --skip-packages  Do not install missing Homebrew packages or Codex.
+  --no-ghostty     Do not install or configure Ghostty and Fira Mono.
+  -h, --help       Show this help.
+EOF
+}
+
+CHECK_ONLY=0
+SKIP_PACKAGES=0
+SETUP_GHOSTTY=1
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --check) CHECK_ONLY=1 ;;
+    --skip-packages) SKIP_PACKAGES=1 ;;
+    --no-ghostty) SETUP_GHOSTTY=0 ;;
+    -h|--help) usage; exit 0 ;;
+    *) printf 'install-vibe: unknown option: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+OS=$(uname -s)
+case "$OS" in
+  Darwin|Linux) ;;
+  *)
+    printf 'install-vibe: unsupported operating system: %s\n' "$OS" >&2
+    exit 1
+    ;;
+esac
+AGENT_COMMAND=${VIBE_AGENT:-codex}
+AGENT_EXECUTABLE=${AGENT_COMMAND%% *}
+EDITOR_COMMAND=${VIBE_EDITOR:-nvim}
+case "$EDITOR_COMMAND" in
+  nvim|nano) ;;
+  *)
+    printf 'install-vibe: unsupported VIBE_EDITOR: %s (use nvim or nano)\n' "$EDITOR_COMMAND" >&2
+    exit 2
+    ;;
+esac
+
+resolve_script() {
+  SOURCE=$1
+  while [ -L "$SOURCE" ]; do
+    BASE=$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd -P)
+    SOURCE=$(readlink "$SOURCE")
+    case "$SOURCE" in
+      /*) ;;
+      *) SOURCE="$BASE/$SOURCE" ;;
+    esac
+  done
+  CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd -P
+}
+
+BIN_SOURCE=$(resolve_script "$0")
+VIBE_ROOT=$(CDPATH= cd -- "$BIN_SOURCE/.." && pwd -P)
+STAMP=$(date +%Y%m%d-%H%M%S)
+BACKUPS=
+
+say() {
+  printf '  %-12s %s\n' "$1" "$2"
+}
+
+backup_path() {
+  ORIGINAL=$1
+  BACKUP="${ORIGINAL}.local-backup-${STAMP}"
+  mv "$ORIGINAL" "$BACKUP"
+  BACKUPS="${BACKUPS}${BACKUPS:+
+}$BACKUP"
+  say BACKUP "$BACKUP"
+}
+
+install_link() {
+  SOURCE=$1
+  TARGET=$2
+
+  mkdir -p "$(dirname -- "$TARGET")"
+  if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SOURCE" ]; then
+    say OK "$TARGET"
+    return
+  fi
+  if [ -e "$TARGET" ] || [ -L "$TARGET" ]; then
+    backup_path "$TARGET"
+  fi
+  ln -s "$SOURCE" "$TARGET"
+  say LINK "$TARGET -> $SOURCE"
+}
+
+append_once() {
+  LINE=$1
+  FILE=$2
+  mkdir -p "$(dirname -- "$FILE")"
+  if [ -f "$FILE" ] && grep -Fqx "$LINE" "$FILE"; then
+    say OK "$FILE already includes Vibe"
+    return
+  fi
+  if [ -e "$FILE" ]; then
+    BACKUP="${FILE}.local-backup-${STAMP}"
+    cp -p "$FILE" "$BACKUP"
+    BACKUPS="${BACKUPS}${BACKUPS:+
+}$BACKUP"
+    say BACKUP "$BACKUP"
+  fi
+  printf '\n%s\n' "$LINE" >> "$FILE"
+  say UPDATE "$FILE"
+}
+
+find_brew() {
+  if command -v brew >/dev/null 2>&1; then
+    command -v brew
+  elif [ -x /opt/homebrew/bin/brew ]; then
+    printf '%s\n' /opt/homebrew/bin/brew
+  elif [ -x /usr/local/bin/brew ]; then
+    printf '%s\n' /usr/local/bin/brew
+  else
+    return 1
+  fi
+}
+
+missing_commands() {
+  MISSING=
+  for COMMAND in tmux yazi "$EDITOR_COMMAND" git; do
+    command -v "$COMMAND" >/dev/null 2>&1 || MISSING="${MISSING}${MISSING:+ }$COMMAND"
+  done
+  printf '%s' "$MISSING"
+}
+
+font_is_installed() {
+  find "$HOME/Library/Fonts" /Library/Fonts "$HOME/.local/share/fonts" /usr/local/share/fonts /usr/share/fonts -maxdepth 2 \
+    \( -iname 'FiraMono-Regular.ttf' -o -iname 'Fira Mono Regular.ttf' \) \
+    -print -quit 2>/dev/null | grep -q .
+}
+
+install_dependencies() {
+  MISSING=$(missing_commands)
+  NEED_GHOSTTY=0
+  NEED_FONT=0
+  [ "$SETUP_GHOSTTY" -eq 0 ] || {
+    [ "$OS" = Darwin ] || NEED_GHOSTTY=0
+    [ "$OS" != Darwin ] || [ -x /Applications/Ghostty.app/Contents/MacOS/ghostty ] || command -v ghostty >/dev/null 2>&1 || NEED_GHOSTTY=1
+    [ "$OS" != Darwin ] || font_is_installed || NEED_FONT=1
+  }
+
+  if [ -n "$MISSING" ] || [ "$NEED_GHOSTTY" -eq 1 ] || [ "$NEED_FONT" -eq 1 ]; then
+    BREW=$(find_brew) || {
+      printf 'install-vibe: missing commands:%s%s\n' "${MISSING:+ }" "$MISSING" >&2
+      printf '%s\n' 'Install the missing dependencies, or install Homebrew from https://brew.sh, then run install-vibe again.' >&2
+      exit 1
+    }
+    if [ -n "$MISSING" ]; then
+      FORMULAE=
+      for COMMAND in $MISSING; do
+        case "$COMMAND" in
+          nvim) FORMULA=neovim ;;
+          *) FORMULA=$COMMAND ;;
+        esac
+        FORMULAE="${FORMULAE}${FORMULAE:+ }$FORMULA"
+      done
+      say INSTALL "$FORMULAE"
+      # shellcheck disable=SC2086
+      "$BREW" install $FORMULAE
+    fi
+    if [ "$NEED_GHOSTTY" -eq 1 ]; then
+      say INSTALL 'Ghostty'
+      "$BREW" install --cask ghostty
+    fi
+    if [ "$NEED_FONT" -eq 1 ]; then
+      say INSTALL 'Fira Mono'
+      "$BREW" install --cask font-fira-mono
+    fi
+  fi
+
+  if [ "$AGENT_EXECUTABLE" = codex ] && ! command -v codex >/dev/null 2>&1; then
+    say INSTALL 'OpenAI Codex CLI'
+    INSTALLER=$(mktemp "${TMPDIR:-/tmp}/codex-install.XXXXXX")
+    trap 'rm -f "$INSTALLER"' EXIT HUP INT TERM
+    curl -fsSL https://chatgpt.com/codex/install.sh -o "$INSTALLER"
+    sh "$INSTALLER"
+    rm -f "$INSTALLER"
+    trap - EXIT HUP INT TERM
+    PATH="$HOME/.local/bin:$PATH"
+    export PATH
+  fi
+}
+
+configure_ghostty() {
+  [ "$SETUP_GHOSTTY" -eq 1 ] || return 0
+  PROFILE="$VIBE_ROOT/ghostty/termius-dark.ghostty"
+  APP_SUPPORT="$HOME/Library/Application Support/com.mitchellh.ghostty"
+
+  if [ "$OS" = Darwin ] && [ -e "$APP_SUPPORT/config.ghostty" ]; then
+    GHOSTTY_CONFIG="$APP_SUPPORT/config.ghostty"
+  elif [ "$OS" = Darwin ] && [ -e "$APP_SUPPORT/config" ]; then
+    GHOSTTY_CONFIG="$APP_SUPPORT/config"
+  elif [ -e "$HOME/.config/ghostty/config.ghostty" ]; then
+    GHOSTTY_CONFIG="$HOME/.config/ghostty/config.ghostty"
+  elif [ -e "$HOME/.config/ghostty/config" ]; then
+    GHOSTTY_CONFIG="$HOME/.config/ghostty/config"
+  else
+    GHOSTTY_CONFIG="$HOME/.config/ghostty/config.ghostty"
+  fi
+
+  append_once "config-file = \"$PROFILE\"" "$GHOSTTY_CONFIG"
+}
+
+install_tpm() {
+  TPM="$HOME/.tmux/plugins/tpm"
+  if [ -x "$TPM/tpm" ]; then
+    say OK 'tmux plugin manager'
+    return
+  fi
+  say INSTALL 'tmux plugin manager'
+  mkdir -p "$HOME/.tmux/plugins"
+  git clone --depth 1 https://github.com/tmux-plugins/tpm "$TPM"
+  "$TPM/bin/install_plugins" || true
+}
+
+configure_paths() {
+  export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+  case "${SHELL:-}" in
+    */zsh) PROFILE="$HOME/.zprofile" ;;
+    *) PROFILE="$HOME/.profile" ;;
+  esac
+  append_once 'export PATH="$HOME/bin:$HOME/.local/bin:$PATH"' "$PROFILE"
+}
+
+install_files() {
+  install_link "$VIBE_ROOT/tmux.conf" "$HOME/.tmux.conf"
+  for NAME in vibe vibe-favorite vibe-loading vibe-main vibe-open vibe-ready install-vibe; do
+    install_link "$BIN_SOURCE/$NAME" "$HOME/bin/$NAME"
+  done
+  install_link "$VIBE_ROOT/scripts/restore-if-saved.sh" "$HOME/bin/vibe-restore"
+}
+
+validate() {
+  FAILED=0
+  for COMMAND in tmux yazi "$EDITOR_COMMAND" "$AGENT_EXECUTABLE"; do
+    if command -v "$COMMAND" >/dev/null 2>&1; then
+      say OK "$COMMAND: $(command -v "$COMMAND")"
+    else
+      say MISSING "$COMMAND"
+      FAILED=1
+    fi
+  done
+
+  sh -n "$BIN_SOURCE/vibe" "$BIN_SOURCE/vibe-favorite" "$BIN_SOURCE/vibe-loading" \
+    "$BIN_SOURCE/vibe-main" "$BIN_SOURCE/vibe-open" "$BIN_SOURCE/vibe-ready" \
+    "$BIN_SOURCE/install-vibe" "$VIBE_ROOT/scripts/restore-if-saved.sh" || FAILED=1
+  env YAZI_CONFIG_HOME="$VIBE_ROOT/yazi" yazi --debug >/dev/null 2>&1 || FAILED=1
+  if [ "$EDITOR_COMMAND" = nvim ]; then
+    env VIBE_NVIM_SOCKET="${TMPDIR:-/tmp}/vibe-install-nvim.sock" VIBE_MAIN_PANE= \
+      nvim --headless -u "$VIBE_ROOT/nvim/vibe.lua" +qa >/dev/null 2>&1 || FAILED=1
+  fi
+
+  SOCKET="vibe-install-check-$$"
+  if tmux -L "$SOCKET" -f "$VIBE_ROOT/tmux.conf" new-session -d -s vibe-install-check 2>/dev/null; then
+    tmux -L "$SOCKET" kill-server 2>/dev/null || true
+    say OK 'tmux configuration'
+  else
+    say FAILED 'tmux configuration'
+    FAILED=1
+  fi
+
+  if [ "$FAILED" -ne 0 ]; then
+    printf '%s\n' 'Vibe validation failed. Review the MISSING/FAILED items above.' >&2
+    return 1
+  fi
+  say READY "Run: vibe [DIR]"
+}
+
+printf '%s\n' 'Vibe installer'
+say SOURCE "$VIBE_ROOT"
+
+if [ "$CHECK_ONLY" -eq 1 ]; then
+  validate
+  exit
+fi
+
+if [ "$SKIP_PACKAGES" -eq 0 ]; then
+  install_dependencies
+fi
+configure_paths
+install_files
+configure_ghostty
+if [ "$SKIP_PACKAGES" -eq 0 ]; then
+  install_tpm
+fi
+validate
+
+if [ -n "$BACKUPS" ]; then
+  printf '%s\n' 'Backups kept:'
+  printf '%s\n' "$BACKUPS" | sed 's/^/  /'
+fi
+
+printf '%s\n' 'Restart Ghostty once if its profile or font was installed.'
