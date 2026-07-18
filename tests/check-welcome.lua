@@ -1,7 +1,12 @@
 local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 local text = table.concat(lines, "\n")
 
-assert(text:find("A minimalist terminal environment for vibe coding", 1, true))
+assert(text:find("A focused terminal workspace for vibe coding", 1, true))
+assert(text:find("\\      /", 1, true))
+assert(text:find("|------", 1, true))
+assert(text:find("OPEN & NAVIGATE", 1, true))
+assert(text:find("EDIT", 1, true))
+assert(text:find("SESSION", 1, true))
 assert(text:find("UW Humanistic GIS Lab", 1, true))
 assert(not text:find("Choose a file in Directory", 1, true))
 assert(not text:find("Author", 1, true))
@@ -9,11 +14,58 @@ assert(not text:find("Affiliation", 1, true))
 assert(not text:find("Website", 1, true))
 assert(not text:find("Version", 1, true))
 
+local title_rows = {}
+for _, line in ipairs(lines) do
+  if line:find("\\      /", 1, true)
+      or line:find(" \\    /", 1, true)
+      or line:find("  \\  /", 1, true)
+      or line:find("   \\/", 1, true) then
+    table.insert(title_rows, line)
+  end
+end
+assert(#title_rows == 7, "welcome wordmark does not have seven rows")
+local title_left
+for _, line in ipairs(title_rows) do
+  local row_left = line:find("%S")
+  if line:find("\\      /", 1, true) then
+    title_left = row_left - 1
+  end
+end
+assert(title_left, "welcome V anchor is missing")
+assert(title_rows[1]:find("-----", title_left + 15, true) == title_left + 15,
+  "I is not at its fixed offset from V")
+assert(title_rows[1]:find("|----\\", title_left + 25, true) == title_left + 25,
+  "B is not at its fixed offset from V")
+assert(title_rows[1]:find("|------", title_left + 37, true) == title_left + 37,
+  "E is not at its fixed offset from V")
+
+local subtitle_row
+local navigation_row
+for row, line in ipairs(lines) do
+  if line:find("A focused terminal workspace for vibe coding", 1, true) then
+    subtitle_row = row
+  elseif line:find("OPEN & NAVIGATE", 1, true) then
+    navigation_row = row
+  end
+end
+assert(subtitle_row and navigation_row, "welcome sections are missing")
+assert(navigation_row - subtitle_row == 4, "subtitle and instructions do not have three blank lines")
+
+local normal_color = vim.api.nvim_get_hl(0, { name = "Normal" }).fg
+local instruction_color = vim.api.nvim_get_hl(0, { name = "VibeInstruction" }).fg
+local meta_color = vim.api.nvim_get_hl(0, { name = "VibeMeta" }).fg
+local version_color = vim.api.nvim_get_hl(0, { name = "VibeVersion" }).fg
+assert(instruction_color == meta_color, "instructions and metadata do not share the secondary tone")
+assert(instruction_color ~= normal_color, "instructions use the primary text color")
+assert(version_color ~= normal_color, "version uses the primary text color")
+local section_color = vim.api.nvim_get_hl(0, { name = "VibeSection" }).fg
+local subtitle_color = vim.api.nvim_get_hl(0, { name = "VibeSubtitle" }).fg
+assert(section_color == subtitle_color, "welcome headings do not share the pale gray tone")
+
 local values = {
-  "Bo Zhao",
-  "UW Humanistic GIS Lab",
+  "Bo Zhao  ·  UW Humanistic GIS Lab",
   "https://hgis.uw.edu",
-  "0.1.0",
+  "v0.1.1",
 }
 for _, value in ipairs(values) do
   local found_column

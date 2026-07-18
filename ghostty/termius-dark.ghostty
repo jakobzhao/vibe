@@ -13,8 +13,10 @@ window-padding-color = background
 cursor-style = block
 cursor-style-blink = true
 
+# Shared Vibe semantic colors: neutral text on the base surface, with green
+# reserved for focus, selection, titles, and the cursor.
 background = #141729
-foreground = #21b568
+foreground = #e2e3e8
 cursor-color = #21b568
 selection-background = #1b6649
 

@@ -27,11 +27,14 @@ local palette = {
   background = "#141729",
   surface = "#343851",
   muted = "#8d91a5",
+  subtle = "#686d82",
   foreground = "#e2e3e8",
   green = "#21b568",
   cyan = "#3ed7be",
   blue = "#2091f6",
   violet = "#9167f5",
+  pink = "#ff7dc5",
+  amber = "#eca855",
   selection = "#1b6649",
 }
 
@@ -54,9 +57,12 @@ local function apply_vibe_theme()
     VibeTitle2 = { fg = palette.cyan, bg = palette.background, bold = true },
     VibeTitle3 = { fg = palette.blue, bg = palette.background, bold = true },
     VibeTitle4 = { fg = palette.violet, bg = palette.background, bold = true },
-    VibeHint = { fg = palette.muted, bg = palette.background },
-    VibeMetaValue = { fg = palette.foreground, bg = palette.background },
-    VibeLink = { fg = palette.blue, bg = palette.background, underline = true },
+    VibeSubtitle = { fg = palette.muted, bg = palette.background },
+    VibeSection = { fg = palette.muted, bg = palette.background, bold = true },
+    VibeInstruction = { fg = palette.subtle, bg = palette.background },
+    VibeMeta = { fg = palette.subtle, bg = palette.background },
+    VibeVersion = { fg = palette.subtle, bg = palette.background },
+    VibeLink = { fg = palette.muted, bg = palette.background, underline = true },
   }
 
   for name, opts in pairs(highlights) do
@@ -86,24 +92,116 @@ vim.api.nvim_create_autocmd("BufEnter", {
   end,
 })
 
+-- Every glyph occupies the same seven-row grid.  Their padded widths place the
+-- visible strokes at fixed columns (V 1-8, I 15-19, B 25-30, E 37-43), so the
+-- top, middle, and baseline stay aligned without row-by-row optical drift.
+local title_glyphs = {
+  {
+    "\\      /      ",
+    "\\      /      ",
+    " \\    /       ",
+    " \\    /       ",
+    "  \\  /        ",
+    "  \\  /        ",
+    "   \\/         ",
+  },
+  {
+    "-----     ",
+    "  |       ",
+    "  |       ",
+    "  |       ",
+    "  |       ",
+    "  |       ",
+    "-----     ",
+  },
+  {
+    "|----\\      ",
+    "|    |      ",
+    "|    |      ",
+    "|----/      ",
+    "|    \\      ",
+    "|    |      ",
+    "|----/      ",
+  },
+  {
+    "|------",
+    "|      ",
+    "|      ",
+    "|----  ",
+    "|      ",
+    "|      ",
+    "|------",
+  },
+}
+
+local title_art = {}
+local title_spans = {}
+for row = 1, #title_glyphs[1] do
+  local parts = {}
+  local column = 0
+  title_spans[row] = {}
+  for index, glyph in ipairs(title_glyphs) do
+    local line = glyph[row]
+    table.insert(parts, line)
+    title_spans[row][index] = { column, column + #line }
+    column = column + #line
+  end
+  title_art[row] = table.concat(parts)
+end
+
 local welcome_content = {
-  { "V I B E", "VibeTitle" },
-  { "A minimalist terminal environment for vibe coding", "VibeHint" },
+  { title_art[1], "VibeTitle" },
+  { title_art[2], "VibeTitle" },
+  { title_art[3], "VibeTitle" },
+  { title_art[4], "VibeTitle" },
+  { title_art[5], "VibeTitle" },
+  { title_art[6], "VibeTitle" },
+  { title_art[7], "VibeTitle" },
   { "", nil },
-  { "Enter open  ·  Mouse enabled  ·  Ctrl-a h/j/k/l move", "VibeHint" },
+  { "A focused terminal workspace for vibe coding", "VibeSubtitle" },
   { "", nil },
-  { "i edit  ·  Esc normal  ·  :w save  ·  :q close", "VibeHint" },
   { "", nil },
-  { "Mouse: click panels  ·  Drag borders to resize", "VibeHint" },
   { "", nil },
-  { "Ctrl-a d detach  ·  Ctrl-a Q quit vibe", "VibeHint" },
+  { "OPEN & NAVIGATE", "VibeSection" },
+  { "Enter opens  ·  mouse focuses  ·  Ctrl-a h/j/k/l moves", "VibeInstruction" },
+  { "", nil },
+  { "EDIT", "VibeSection" },
+  { "i insert  ·  Esc normal  ·  :w save  ·  :q close", "VibeInstruction" },
+  { "", nil },
+  { "SESSION", "VibeSection" },
+  { "drag borders to resize  ·  Ctrl-a d detach  ·  Ctrl-a Q quit", "VibeInstruction" },
+}
+
+local compact_welcome_content = {
+  { title_art[1], "VibeTitle" },
+  { title_art[2], "VibeTitle" },
+  { title_art[3], "VibeTitle" },
+  { title_art[4], "VibeTitle" },
+  { title_art[5], "VibeTitle" },
+  { title_art[6], "VibeTitle" },
+  { title_art[7], "VibeTitle" },
+  { "", nil },
+  { "A focused terminal workspace", "VibeSubtitle" },
+  { "", nil },
+  { "", nil },
+  { "", nil },
+  { "OPEN & NAVIGATE", "VibeSection" },
+  { "Enter opens  ·  mouse focuses", "VibeInstruction" },
+  { "Ctrl-a h/j/k/l moves", "VibeInstruction" },
+  { "", nil },
+  { "EDIT", "VibeSection" },
+  { "i insert  ·  Esc normal", "VibeInstruction" },
+  { ":w save  ·  :q close", "VibeInstruction" },
+  { "", nil },
+  { "SESSION", "VibeSection" },
+  { "drag borders to resize", "VibeInstruction" },
+  { "Ctrl-a d detach  ·  Ctrl-a Q quit", "VibeInstruction" },
 }
 
 local welcome_footer = {
-  { value = "Bo Zhao" },
-  { value = "UW Humanistic GIS Lab" },
-  { value = "https://hgis.uw.edu", url = "https://hgis.uw.edu" },
-  { value = "0.1.0" },
+  { value = "Bo Zhao  ·  UW Humanistic GIS Lab", highlight = "VibeMeta" },
+  { value = "https://hgis.uw.edu", url = "https://hgis.uw.edu", highlight = "VibeLink" },
+  { value = "v0.1.1", highlight = "VibeVersion" },
 }
 
 local welcome_buf
@@ -139,15 +237,16 @@ local function render_welcome()
 
   local width = vim.api.nvim_win_get_width(win)
   local height = vim.api.nvim_win_get_height(win)
+  local content = width < 65 and compact_welcome_content or welcome_content
   local footer_gap = 2
   local bottom_margin = 1
   local content_height = math.max(1, height - #welcome_footer - footer_gap - bottom_margin)
-  local top = math.max(0, math.floor((content_height - #welcome_content) / 2))
+  local top = math.max(0, math.floor((content_height - #content) / 2))
   local lines = {}
   for _ = 1, top do
     table.insert(lines, "")
   end
-  for _, item in ipairs(welcome_content) do
+  for _, item in ipairs(content) do
     local text = item[1]
     local padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth(text)) / 2))
     table.insert(lines, string.rep(" ", padding) .. text)
@@ -167,21 +266,23 @@ local function render_welcome()
   vim.bo[buf].modifiable = true
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_buf_clear_namespace(buf, welcome_namespace, 0, -1)
-  for index, item in ipairs(welcome_content) do
+  for index, item in ipairs(content) do
     if item[2] then
       vim.api.nvim_buf_add_highlight(buf, welcome_namespace, item[2], top + index - 1, 0, -1)
     end
   end
-  local title_padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth("V I B E")) / 2))
-  for index, column in ipairs({ 0, 2, 4, 6 }) do
-    vim.api.nvim_buf_add_highlight(
-      buf,
-      welcome_namespace,
-      "VibeTitle" .. index,
-      top,
-      title_padding + column,
-      title_padding + column + 1
-    )
+  for row_offset, title_line in ipairs(title_art) do
+    local title_padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth(title_line)) / 2))
+    for index, span in ipairs(title_spans[row_offset]) do
+      vim.api.nvim_buf_add_highlight(
+        buf,
+        welcome_namespace,
+        "VibeTitle" .. index,
+        top + row_offset - 1,
+        title_padding + span[1],
+        title_padding + span[2]
+      )
+    end
   end
   for index, item in ipairs(welcome_footer) do
     local row = footer_start + index - 1
@@ -189,7 +290,7 @@ local function render_welcome()
     vim.api.nvim_buf_add_highlight(
       buf,
       welcome_namespace,
-      item.url and "VibeLink" or "VibeMetaValue",
+      item.highlight,
       row,
       value_start,
       value_start + #item.value
@@ -211,7 +312,14 @@ local function render_welcome()
   vim.bo[buf].readonly = true
 end
 
-local animation_colors = { palette.green, palette.cyan, palette.blue, palette.violet }
+local animation_colors = {
+  palette.green,
+  palette.cyan,
+  palette.blue,
+  palette.violet,
+  palette.pink,
+  palette.amber,
+}
 local animation_timer
 local animation_step = 0
 
@@ -234,8 +342,9 @@ local function start_title_animation()
     return
   end
 
-  local steps_per_color = 16
-  animation_timer = vim.fn.timer_start(250, function()
+  -- Six transitions at 1.6 seconds each make a calm 9.6-second rainbow loop.
+  local steps_per_color = 8
+  animation_timer = vim.fn.timer_start(200, function()
     if not welcome_buf or vim.fn.bufwinid(welcome_buf) == -1 then
       return
     end
