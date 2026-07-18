@@ -1,0 +1,68 @@
+#!/usr/bin/env sh
+set -eu
+
+usage() {
+  printf '%s\n' 'Usage: vibe-tab {shell|directory} SESSION' >&2
+  printf '%s\n' '       vibe-tab mouse SESSION MOUSE_X PANE_LEFT CURRENT_PANE' >&2
+  exit 2
+}
+
+switch_tab() {
+  TAB=$1
+  SESSION=$2
+
+  tmux has-session -t "=$SESSION" 2>/dev/null || exit 0
+  COCKPIT_WINDOW=$(tmux show-option -qv -t "$SESSION" @vibe_cockpit_window)
+  DIRECTORY_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_directory_pane)
+  SHELL_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_shell_pane)
+  [ -n "$COCKPIT_WINDOW" ] && [ -n "$DIRECTORY_PANE" ] && [ -n "$SHELL_PANE" ] || exit 1
+
+  case "$TAB" in
+    shell)
+      TARGET_PANE=$SHELL_PANE
+      OTHER_PANE=$DIRECTORY_PANE
+      ;;
+    directory)
+      TARGET_PANE=$DIRECTORY_PANE
+      OTHER_PANE=$SHELL_PANE
+      ;;
+    *) usage ;;
+  esac
+
+  TARGET_WINDOW=$(tmux display-message -p -t "$TARGET_PANE" '#{window_id}')
+  if [ "$TARGET_WINDOW" != "$COCKPIT_WINDOW" ]; then
+    OTHER_WINDOW=$(tmux display-message -p -t "$OTHER_PANE" '#{window_id}')
+    [ "$OTHER_WINDOW" = "$COCKPIT_WINDOW" ] || exit 1
+    tmux swap-pane -d -s "$TARGET_PANE" -t "$OTHER_PANE"
+  fi
+
+  tmux select-window -t "$COCKPIT_WINDOW"
+  tmux select-pane -t "$TARGET_PANE"
+}
+
+[ "$#" -gt 0 ] || usage
+case "$1" in
+  shell|directory)
+    [ "$#" -eq 2 ] || usage
+    switch_tab "$1" "$2"
+    ;;
+  mouse)
+    [ "$#" -eq 5 ] || usage
+    SESSION=$2
+    MOUSE_X=$3
+    PANE_LEFT=$4
+    CURRENT_PANE=$5
+    case "$MOUSE_X:$PANE_LEFT" in
+      *[!0-9:]*|:|*:|:*) exit 0 ;;
+    esac
+    OFFSET=$((MOUSE_X - PANE_LEFT))
+    if [ "$OFFSET" -ge 2 ] && [ "$OFFSET" -le 9 ]; then
+      switch_tab shell "$SESSION"
+    elif [ "$OFFSET" -ge 10 ] && [ "$OFFSET" -le 21 ]; then
+      switch_tab directory "$SESSION"
+    else
+      tmux select-pane -t "$CURRENT_PANE" 2>/dev/null || true
+    fi
+    ;;
+  *) usage ;;
+esac

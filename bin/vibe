@@ -31,8 +31,8 @@ Usage:
   vibe --list
 
 Without options, vibe opens a lightweight terminal IDE in the current directory:
-  Directory | Shell | Editor
-  Codex             |
+  Shell | Directory | Editor
+  Agent             |
 
 Set VIBE_EDITOR=nano for a one-session Nano Editor panel.
 
@@ -226,11 +226,12 @@ tmux respawn-pane -k -t "$LOADING_PANE" -c "$DIR" "$LOADING_COMMAND"
 tmux select-window -t "$SESSION:loading"
 
 # Match the default cockpit's visual balance: Editor gets roughly three fifths
-# of the window; the left side splits evenly by height, with Shell and
-# Directory sharing the upper row equally.
+# of the window; Agent uses the lower-left, and the upper-left is one visible
+# tab slot. Directory starts there while Shell stays alive in a parking window.
 DIR_PANE=$(tmux split-window -h -b -l 38% -P -F '#{pane_id}' -t "$MAIN_PANE" -c "$DIR")
 AI_PANE=$(tmux split-window -v -l 51% -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
-SHELL_PANE=$(tmux split-window -h -b -l 50% -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
+SHELL_PANE=$(tmux new-window -d -P -F '#{pane_id}' -t "$SESSION" -n tabs -c "$DIR")
+COCKPIT_WINDOW=$(tmux display-message -p -t "$MAIN_PANE" '#{window_id}')
 
 SOCKET_ROOT=${TMPDIR:-/tmp}
 SOCKET_ROOT=${SOCKET_ROOT%/}
@@ -239,6 +240,7 @@ tmux set-environment -t "$SESSION" VIBE_NVIM_SOCKET "$SOCKET"
 tmux set-environment -t "$SESSION" VIBE_MAIN_PANE "$MAIN_PANE"
 tmux set-environment -t "$SESSION" VIBE_DIRECTORY_PANE "$DIR_PANE"
 tmux set-environment -t "$SESSION" VIBE_SHELL_PANE "$SHELL_PANE"
+tmux set-environment -t "$SESSION" VIBE_TAB_HELPER "$VIBE_BIN_DIR/vibe-tab"
 tmux set-environment -t "$SESSION" VIBE_EDITOR "$VIBE_EDITOR"
 tmux set-environment -t "$SESSION" VIBE_COMPACT_UI "$VIBE_COMPACT_UI"
 tmux set-environment -t "$SESSION" VIBE_ANIMATIONS "$VIBE_ANIMATIONS"
@@ -253,8 +255,14 @@ tmux select-pane -t "$DIR_PANE" -T 'Directory'
 tmux select-pane -t "$SHELL_PANE" -T 'Shell'
 tmux set-option -p -t "$MAIN_PANE" @vibe_role 'Editor'
 tmux set-option -p -t "$DIR_PANE" @vibe_role 'Directory'
-tmux set-option -p -t "$DIR_PANE" @vibe_favorites_click 1
 tmux set-option -p -t "$SHELL_PANE" @vibe_role 'Shell'
+tmux set-option -p -t "$DIR_PANE" @vibe_tabs 1
+tmux set-option -p -t "$DIR_PANE" @vibe_tab_kind 'directory'
+tmux set-option -p -t "$SHELL_PANE" @vibe_tabs 1
+tmux set-option -p -t "$SHELL_PANE" @vibe_tab_kind 'shell'
+tmux set-option -t "$SESSION" @vibe_cockpit_window "$COCKPIT_WINDOW"
+tmux set-option -t "$SESSION" @vibe_directory_pane "$DIR_PANE"
+tmux set-option -t "$SESSION" @vibe_shell_pane "$SHELL_PANE"
 MAIN_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_COMPACT_UI=$(shell_quote "$VIBE_COMPACT_UI") VIBE_ANIMATIONS=$(shell_quote "$VIBE_ANIMATIONS") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_NVIM_CONFIG=$(shell_quote "$VIBE_ROOT/nvim/vibe.lua") $(shell_quote "$VIBE_BIN_DIR/vibe-main")"
 DIRECTORY_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_DIRECTORY_PANE=$(shell_quote "$DIR_PANE") VIBE_PROJECT_DIR=$(shell_quote "$DIR") VIBE_FAVORITES_DIR=$(shell_quote "$FAVORITES_DIR") VIBE_FAVORITE_HELPER=$(shell_quote "$VIBE_BIN_DIR/vibe-favorite") YAZI_CONFIG_HOME=$(shell_quote "$VIBE_ROOT/yazi") EDITOR=$(shell_quote "$VIBE_BIN_DIR/vibe-open") yazi ."
 SHELL_COMMAND="exec $(shell_quote "$VIBE_BIN_DIR/vibe-shell")"
@@ -279,7 +287,7 @@ while IFS= read -r AGENT; do
   fi
 
   case "$LABEL" in
-    codex) PANE_TITLE='Codex' ;;
+    codex) PANE_TITLE='Agent' ;;
     claude) PANE_TITLE='Claude' ;;
     gemini) PANE_TITLE='Gemini' ;;
     opencode) PANE_TITLE='OpenCode' ;;
