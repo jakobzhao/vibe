@@ -9,6 +9,7 @@ shift 4
 
 reveal_cockpit() {
   tmux has-session -t "=$SESSION" 2>/dev/null || return 0
+  tmux select-window -t "$SESSION:cockpit" 2>/dev/null || true
   tmux select-pane -t "$DIRECTORY_PANE" 2>/dev/null || true
   tmux set-option -t "$SESSION" @vibe_ready 1 2>/dev/null || true
 }
