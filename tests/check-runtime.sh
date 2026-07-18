@@ -65,7 +65,6 @@ printf '%s\n' "$PANES" | grep -Fqx 'Directory|0|yazi'
 ! printf '%s\n' "$PANES" | grep -Eq '^Shell\|'
 printf '%s\n' "$PANES" | grep -Fqx 'Editor|0|nvim'
 [ "$(tmux show-option -qv -t "$SESSION" status)" = off ]
-tmux list-keys -T root MouseDown1Border | grep -Fq 'VIBE_TAB_HELPER'
 
 COCKPIT_WINDOW=$(tmux show-option -qv -t "$SESSION" @vibe_cockpit_window)
 DIRECTORY_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_directory_pane)
@@ -75,7 +74,8 @@ SHELL_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_shell_pane)
 [ "$(tmux display-message -p -t "$SHELL_PANE" '#{window_id}')" != "$COCKPIT_WINDOW" ]
 [ "$(tmux show-option -pqv -t "$DIRECTORY_PANE" @vibe_tab_kind)" = directory ]
 [ "$(tmux show-option -pqv -t "$SHELL_PANE" @vibe_tab_kind)" = shell ]
-[ "$(tmux display-message -p -t "$DIRECTORY_PANE" '#{VIBE_TAB_HELPER}')" = "$ROOT/bin/vibe-tab" ]
+[ "$(tmux show-option -pqv -t "$DIRECTORY_PANE" @vibe_tab_helper)" = "$ROOT/bin/vibe-tab" ]
+[ "$(tmux show-option -pqv -t "$SHELL_PANE" @vibe_tab_helper)" = "$ROOT/bin/vibe-tab" ]
 BORDER=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{E:pane-border-format}')
 printf '%s\n' "$BORDER" | grep -Fq Shell
 printf '%s\n' "$BORDER" | grep -Fq Directory
@@ -84,7 +84,7 @@ DIRECTORY_PID=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{pane_pid}')
 SHELL_PID=$(tmux display-message -p -t "$SHELL_PANE" '#{pane_pid}')
 DIRECTORY_LEFT=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{pane_left}')
 tmux run-shell -t "$DIRECTORY_PANE" \
-  "\"#{VIBE_TAB_HELPER}\" mouse \"#{session_name}\" \"$((DIRECTORY_LEFT + 4))\" \"$DIRECTORY_LEFT\" \"#{pane_id}\""
+  "\"#{@vibe_tab_helper}\" mouse \"#{session_name}\" \"$((DIRECTORY_LEFT + 4))\" \"$DIRECTORY_LEFT\" \"#{pane_id}\""
 [ "$(tmux display-message -p -t "$SHELL_PANE" '#{window_id}')" = "$COCKPIT_WINDOW" ]
 [ "$(tmux display-message -p -t "$DIRECTORY_PANE" '#{window_id}')" != "$COCKPIT_WINDOW" ]
 SWITCHED_PANES=$(tmux list-panes -t "$COCKPIT_WINDOW" -F '#{@vibe_role}')
@@ -93,7 +93,7 @@ printf '%s\n' "$SWITCHED_PANES" | grep -Fqx Shell
 
 SHELL_LEFT=$(tmux display-message -p -t "$SHELL_PANE" '#{pane_left}')
 tmux run-shell -t "$SHELL_PANE" \
-  "\"#{VIBE_TAB_HELPER}\" mouse \"#{session_name}\" \"$((SHELL_LEFT + 12))\" \"$SHELL_LEFT\" \"#{pane_id}\""
+  "\"#{@vibe_tab_helper}\" mouse \"#{session_name}\" \"$((SHELL_LEFT + 12))\" \"$SHELL_LEFT\" \"#{pane_id}\""
 [ "$(tmux display-message -p -t "$DIRECTORY_PANE" '#{window_id}')" = "$COCKPIT_WINDOW" ]
 [ "$(tmux display-message -p -t "$SHELL_PANE" '#{window_id}')" != "$COCKPIT_WINDOW" ]
 [ "$(tmux display-message -p -t "$DIRECTORY_PANE" '#{pane_pid}')" = "$DIRECTORY_PID" ]

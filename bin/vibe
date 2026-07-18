@@ -240,7 +240,6 @@ tmux set-environment -t "$SESSION" VIBE_NVIM_SOCKET "$SOCKET"
 tmux set-environment -t "$SESSION" VIBE_MAIN_PANE "$MAIN_PANE"
 tmux set-environment -t "$SESSION" VIBE_DIRECTORY_PANE "$DIR_PANE"
 tmux set-environment -t "$SESSION" VIBE_SHELL_PANE "$SHELL_PANE"
-tmux set-environment -t "$SESSION" VIBE_TAB_HELPER "$VIBE_BIN_DIR/vibe-tab"
 tmux set-environment -t "$SESSION" VIBE_EDITOR "$VIBE_EDITOR"
 tmux set-environment -t "$SESSION" VIBE_COMPACT_UI "$VIBE_COMPACT_UI"
 tmux set-environment -t "$SESSION" VIBE_ANIMATIONS "$VIBE_ANIMATIONS"
@@ -258,8 +257,10 @@ tmux set-option -p -t "$DIR_PANE" @vibe_role 'Directory'
 tmux set-option -p -t "$SHELL_PANE" @vibe_role 'Shell'
 tmux set-option -p -t "$DIR_PANE" @vibe_tabs 1
 tmux set-option -p -t "$DIR_PANE" @vibe_tab_kind 'directory'
+tmux set-option -p -t "$DIR_PANE" @vibe_tab_helper "$VIBE_BIN_DIR/vibe-tab"
 tmux set-option -p -t "$SHELL_PANE" @vibe_tabs 1
 tmux set-option -p -t "$SHELL_PANE" @vibe_tab_kind 'shell'
+tmux set-option -p -t "$SHELL_PANE" @vibe_tab_helper "$VIBE_BIN_DIR/vibe-tab"
 tmux set-option -t "$SESSION" @vibe_cockpit_window "$COCKPIT_WINDOW"
 tmux set-option -t "$SESSION" @vibe_directory_pane "$DIR_PANE"
 tmux set-option -t "$SESSION" @vibe_shell_pane "$SHELL_PANE"
