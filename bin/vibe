@@ -228,9 +228,9 @@ tmux select-window -t "$SESSION:loading"
 # Match the default cockpit's visual balance: Editor gets roughly three fifths
 # of the window; the left side splits evenly by height, with Shell and
 # Directory sharing the upper row equally.
-DIR_PANE=$(tmux split-window -h -b -p 38 -P -F '#{pane_id}' -t "$MAIN_PANE" -c "$DIR")
-AI_PANE=$(tmux split-window -v -p 51 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
-SHELL_PANE=$(tmux split-window -h -b -p 50 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
+DIR_PANE=$(tmux split-window -h -b -l 38% -P -F '#{pane_id}' -t "$MAIN_PANE" -c "$DIR")
+AI_PANE=$(tmux split-window -v -l 51% -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
+SHELL_PANE=$(tmux split-window -h -b -l 50% -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
 
 SOCKET_ROOT=${TMPDIR:-/tmp}
 SOCKET_ROOT=${SOCKET_ROOT%/}
@@ -282,6 +282,9 @@ while IFS= read -r AGENT; do
   case "$LABEL" in
     codex) PANE_TITLE='Codex' ;;
     claude) PANE_TITLE='Claude' ;;
+    gemini) PANE_TITLE='Gemini' ;;
+    opencode) PANE_TITLE='OpenCode' ;;
+    aider) PANE_TITLE='Aider' ;;
     *) PANE_TITLE=$LABEL ;;
   esac
   tmux select-pane -t "$PANE" -T "$PANE_TITLE"

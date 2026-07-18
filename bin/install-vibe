@@ -5,7 +5,7 @@ usage() {
   cat <<'EOF'
 Usage: install-vibe [OPTIONS]
 
-Install the portable Vibe terminal workspace on macOS or Linux.
+Install the portable Vibe terminal workspace on macOS, Linux, or Windows through WSL.
 
 Options:
   --check          Validate the machine without changing it.
@@ -33,6 +33,11 @@ done
 OS=$(uname -s)
 case "$OS" in
   Darwin|Linux) ;;
+  MINGW*|MSYS*|CYGWIN*)
+    printf '%s\n' 'install-vibe: native Windows is not supported; run Vibe inside WSL2.' >&2
+    printf '%s\n' 'See https://github.com/jakobzhao/vibe#windows-1011-wsl2' >&2
+    exit 1
+    ;;
   *)
     printf 'install-vibe: unsupported operating system: %s\n' "$OS" >&2
     exit 1
@@ -127,6 +132,100 @@ find_brew() {
   fi
 }
 
+is_ubuntu() {
+  [ "$OS" = Linux ] || return 1
+  [ -r /etc/os-release ] || return 1
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  [ "${ID:-}" = ubuntu ]
+}
+
+run_apt() {
+  if [ "$(id -u)" -eq 0 ]; then
+    apt-get "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo apt-get "$@"
+  else
+    printf '%s\n' 'install-vibe: sudo is required to install Ubuntu packages.' >&2
+    return 1
+  fi
+}
+
+install_yazi_release() {
+  case "$(uname -m)" in
+    x86_64|amd64) YAZI_TARGET=x86_64-unknown-linux-gnu ;;
+    aarch64|arm64) YAZI_TARGET=aarch64-unknown-linux-gnu ;;
+    *)
+      printf 'install-vibe: no prebuilt Yazi package for architecture: %s\n' "$(uname -m)" >&2
+      return 1
+      ;;
+  esac
+
+  YAZI_TMP=$(mktemp -d "${TMPDIR:-/tmp}/vibe-yazi.XXXXXX")
+  YAZI_ARCHIVE="$YAZI_TMP/yazi.zip"
+  YAZI_URL="https://github.com/sxyazi/yazi/releases/latest/download/yazi-$YAZI_TARGET.zip"
+  curl -fsSL "$YAZI_URL" -o "$YAZI_ARCHIVE"
+  unzip -q "$YAZI_ARCHIVE" -d "$YAZI_TMP"
+  YAZI_BINARY=$(find "$YAZI_TMP" -type f -name yazi -print -quit)
+  YA_BINARY=$(find "$YAZI_TMP" -type f -name ya -print -quit)
+  [ -n "$YAZI_BINARY" ] && [ -n "$YA_BINARY" ] || {
+    printf '%s\n' 'install-vibe: downloaded Yazi archive is incomplete.' >&2
+    rm -rf "$YAZI_TMP"
+    return 1
+  }
+  mkdir -p "$HOME/.local/bin"
+  cp "$YAZI_BINARY" "$HOME/.local/bin/yazi"
+  cp "$YA_BINARY" "$HOME/.local/bin/ya"
+  chmod +x "$HOME/.local/bin/yazi" "$HOME/.local/bin/ya"
+  rm -rf "$YAZI_TMP"
+  PATH="$HOME/.local/bin:$PATH"
+  export PATH
+}
+
+install_ubuntu_dependencies() {
+  APT_PACKAGES="curl unzip"
+  for COMMAND in $MISSING; do
+    case "$COMMAND" in
+      yazi) ;;
+      nvim) APT_PACKAGES="$APT_PACKAGES neovim" ;;
+      *) APT_PACKAGES="$APT_PACKAGES $COMMAND" ;;
+    esac
+  done
+  say INSTALL "Ubuntu packages: $APT_PACKAGES"
+  run_apt update
+  # shellcheck disable=SC2086
+  run_apt install -y $APT_PACKAGES
+  command -v yazi >/dev/null 2>&1 || {
+    say INSTALL 'Yazi release binary'
+    install_yazi_release
+  }
+}
+
+install_brew_dependencies() {
+  BREW=$1
+  if [ -n "$MISSING" ]; then
+    FORMULAE=
+    for COMMAND in $MISSING; do
+      case "$COMMAND" in
+        nvim) FORMULA=neovim ;;
+        *) FORMULA=$COMMAND ;;
+      esac
+      FORMULAE="${FORMULAE}${FORMULAE:+ }$FORMULA"
+    done
+    say INSTALL "$FORMULAE"
+    # shellcheck disable=SC2086
+    "$BREW" install $FORMULAE
+  fi
+  if [ "$NEED_GHOSTTY" -eq 1 ]; then
+    say INSTALL 'Ghostty'
+    "$BREW" install --cask ghostty
+  fi
+  if [ "$NEED_FONT" -eq 1 ]; then
+    say INSTALL 'Fira Mono'
+    "$BREW" install --cask font-fira-mono
+  fi
+}
+
 missing_commands() {
   MISSING=
   for COMMAND in tmux yazi "$EDITOR_COMMAND" git; do
@@ -152,31 +251,14 @@ install_dependencies() {
   }
 
   if [ -n "$MISSING" ] || [ "$NEED_GHOSTTY" -eq 1 ] || [ "$NEED_FONT" -eq 1 ]; then
-    BREW=$(find_brew) || {
+    if is_ubuntu && command -v apt-get >/dev/null 2>&1; then
+      install_ubuntu_dependencies
+    elif BREW=$(find_brew); then
+      install_brew_dependencies "$BREW"
+    else
       printf 'install-vibe: missing commands:%s%s\n' "${MISSING:+ }" "$MISSING" >&2
-      printf '%s\n' 'Install the missing dependencies, or install Homebrew from https://brew.sh, then run install-vibe again.' >&2
+      printf '%s\n' 'Install the missing dependencies and run install-vibe again.' >&2
       exit 1
-    }
-    if [ -n "$MISSING" ]; then
-      FORMULAE=
-      for COMMAND in $MISSING; do
-        case "$COMMAND" in
-          nvim) FORMULA=neovim ;;
-          *) FORMULA=$COMMAND ;;
-        esac
-        FORMULAE="${FORMULAE}${FORMULAE:+ }$FORMULA"
-      done
-      say INSTALL "$FORMULAE"
-      # shellcheck disable=SC2086
-      "$BREW" install $FORMULAE
-    fi
-    if [ "$NEED_GHOSTTY" -eq 1 ]; then
-      say INSTALL 'Ghostty'
-      "$BREW" install --cask ghostty
-    fi
-    if [ "$NEED_FONT" -eq 1 ]; then
-      say INSTALL 'Fira Mono'
-      "$BREW" install --cask font-fira-mono
     fi
   fi
 

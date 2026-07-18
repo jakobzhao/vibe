@@ -15,16 +15,39 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
-      - name: Install Neovim
+      - name: Install runtime dependencies
         run: |
-          if ! command -v nvim >/dev/null 2>&1; then
-            if command -v brew >/dev/null 2>&1; then
-              brew install neovim
-            else
-              sudo apt-get update
-              sudo apt-get install -y neovim
-            fi
+          if command -v brew >/dev/null 2>&1; then
+            brew install neovim tmux yazi
+          else
+            sudo apt-get update
+            sudo apt-get install -y neovim tmux curl unzip
+            curl -fsSL https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip -o /tmp/yazi.zip
+            unzip -q /tmp/yazi.zip -d /tmp/yazi
+            sudo install "$(find /tmp/yazi -type f -name yazi -print -quit)" /usr/local/bin/yazi
+            sudo install "$(find /tmp/yazi -type f -name ya -print -quit)" /usr/local/bin/ya
           fi
           nvim --version | head -n 1
-      - name: Check scripts
+          tmux -V
+          yazi --version
+      - name: Check Vibe
         run: ./tests/check.sh
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check Windows bridge
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path ./install-windows.ps1),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            throw ($errors | Format-List | Out-String)
+          }
+          Select-String -Path README.md -SimpleMatch 'Windows 10/11 (WSL2)' | Out-Null
