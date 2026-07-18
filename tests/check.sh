@@ -57,7 +57,11 @@ done
 
 if command -v tmux >/dev/null 2>&1 && command -v yazi >/dev/null 2>&1; then
   printf '%s\n' 'Checking multi-agent runtime...'
-  "$ROOT/tests/check-runtime.sh"
+  if ! "$ROOT/tests/check-runtime.sh"; then
+    printf '%s\n' 'Runtime check failed; rerunning with shell trace...' >&2
+    sh -x "$ROOT/tests/check-runtime.sh"
+    exit 1
+  fi
 else
   printf '%s\n' 'Skipping runtime check (tmux or yazi is missing).'
 fi
