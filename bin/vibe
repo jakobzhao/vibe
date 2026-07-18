@@ -282,6 +282,9 @@ while IFS= read -r AGENT; do
   case "$LABEL" in
     codex) PANE_TITLE='Codex' ;;
     claude) PANE_TITLE='Claude' ;;
+    gemini) PANE_TITLE='Gemini' ;;
+    opencode) PANE_TITLE='OpenCode' ;;
+    aider) PANE_TITLE='Aider' ;;
     *) PANE_TITLE=$LABEL ;;
   esac
   tmux select-pane -t "$PANE" -T "$PANE_TITLE"

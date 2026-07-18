@@ -19,6 +19,12 @@ grep -Fq 'tmux new-session -d -x "$INITIAL_WIDTH" -y "$INITIAL_HEIGHT"' "$ROOT/b
 grep -Fq "split-window -h -b -p 38" "$ROOT/bin/vibe"
 grep -Fq "split-window -v -p 51" "$ROOT/bin/vibe"
 grep -Fq "split-window -h -b -p 50" "$ROOT/bin/vibe"
+grep -Fq "claude) PANE_TITLE='Claude'" "$ROOT/bin/vibe"
+grep -Fq "gemini) PANE_TITLE='Gemini'" "$ROOT/bin/vibe"
+grep -Fq "opencode) PANE_TITLE='OpenCode'" "$ROOT/bin/vibe"
+grep -Fq "aider) PANE_TITLE='Aider'" "$ROOT/bin/vibe"
+grep -Fq 'Windows 10/11 (WSL2)' "$ROOT/README.md"
+grep -Fq 'v0.2.0' "$ROOT/nvim/vibe.lua"
 
 TMP_HOME=$(mktemp -d "${TMPDIR:-/tmp}/vibe-check.XXXXXX")
 trap 'rm -rf "$TMP_HOME"' EXIT HUP INT TERM
@@ -37,7 +43,15 @@ for scenario in clean modified force; do
     -l "$ROOT/tests/check-close.lua" "$scenario"
 done
 
-if find "$ROOT" -type f -not -path "$ROOT/.git/*" -not -path "$ROOT/tests/check.sh" -not -name README.md \
+if command -v tmux >/dev/null 2>&1 && command -v yazi >/dev/null 2>&1; then
+  printf '%s\n' 'Checking multi-agent runtime...'
+  "$ROOT/tests/check-runtime.sh"
+else
+  printf '%s\n' 'Skipping runtime check (tmux or yazi is missing).'
+fi
+
+if find "$ROOT" -type f -not -path "$ROOT/.git" -not -path "$ROOT/.git/*" \
+  -not -path "$ROOT/tests/check.sh" -not -name README.md \
   -exec grep -En '/Users/|locaphilia|jakobzhao@gmail|GoogleDrive-' {} +; then
   printf '%s\n' 'Personal path or identifier found.' >&2
   exit 1

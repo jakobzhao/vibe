@@ -22,7 +22,8 @@ run in the lower-left pane.
 - Yazi directory browser with reusable favorites
 - Ready-to-use project shell beside the directory browser
 - Neovim or Nano as the Editor
-- Codex by default, with support for Claude or any interactive CLI agent
+- Codex by default, with named support for Claude, Gemini, OpenCode, and Aider
+- Generic support for any persistent interactive CLI agent
 - Multiple agents in one workspace
 - One-command Git worktrees for isolated tasks
 - Mouse and keyboard navigation
@@ -31,7 +32,7 @@ run in the lower-left pane.
 
 ## Requirements
 
-Vibe supports macOS and Linux. It needs:
+Vibe supports macOS, Ubuntu, and Windows through WSL2. It needs:
 
 - `tmux`
 - `yazi`
@@ -39,16 +40,48 @@ Vibe supports macOS and Linux. It needs:
 - `git`
 - at least one interactive agent command, such as `codex` or `claude`
 
-The installer can install dependencies through Homebrew. On Linux without
-Homebrew, install the requirements with your system package manager first.
+The installer uses Homebrew on macOS and `apt` plus the official Yazi release
+binary on Ubuntu. Windows runs the same Ubuntu path inside WSL2; native Windows
+is not supported because Vibe uses tmux.
 
 ## Install
 
-### Quick install
+### macOS
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/jakobzhao/vibe/main/install.sh | sh
 ```
+
+### Ubuntu 20.04+
+
+Install the two bootstrap tools, then run the same installer. It installs
+missing tmux, Yazi, and editor dependencies:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y curl git
+curl -fsSL https://raw.githubusercontent.com/jakobzhao/vibe/main/install.sh | sh
+```
+
+### Windows 10/11 (WSL2)
+
+Vibe runs inside Ubuntu on WSL2, not in native PowerShell, Command Prompt, or
+Git Bash. From an elevated PowerShell terminal, install WSL when needed:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+After the required restart, install Vibe through the included Windows bridge:
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/jakobzhao/vibe/main/install-windows.ps1 -OutFile $env:TEMP\install-vibe.ps1
+& $env:TEMP\install-vibe.ps1
+```
+
+Open Ubuntu and run `vibe`. Files under `/mnt/c`, `/mnt/d`, and other mounted
+Windows drives can be opened, although projects kept in the WSL filesystem are
+usually faster.
 
 The installer clones Vibe into `~/.local/share/vibe`, creates links in `~/bin`,
 preserves replaced files as timestamped backups, installs TPM plugins, and adds
@@ -76,6 +109,8 @@ vibe                         # current directory, Codex agent
 vibe ~/code/my-project       # another project
 vibe -a claude .             # use another agent
 vibe -a codex -a claude .    # run multiple agents
+vibe -a gemini -a opencode . # mix other installed agents
+vibe -a 'aider --model sonnet' .
 vibe -w feature/login .      # create/reuse an isolated Git worktree
 vibe --list                  # list running Vibe sessions
 ```
@@ -91,6 +126,12 @@ export VIBE_ANIMATIONS=0  # disable the subtle VIBE title animation
 
 Set these variables before running the installer too; validation and automatic
 dependency installation will follow the selected agent and editor.
+
+Vibe starts agent commands exactly as supplied. Codex receives optional compact
+UI settings; all other agents retain their native interface. Install and
+authenticate each agent CLI before selecting it. Recognized pane titles include
+Codex, Claude, Gemini, OpenCode, and Aider, while any other persistent
+interactive command uses its executable name.
 
 Inside Vibe, press `Ctrl-a` and then:
 
@@ -133,7 +174,8 @@ Vibe keeps user-created favorites outside the repository at
 ## Contributing
 
 Issues and pull requests are welcome. Run `./tests/check.sh` before submitting a
-change. Please keep the core dependency-light and portable across macOS and Linux.
+change. Please keep the core dependency-light and portable across macOS,
+Ubuntu, and WSL2.
 
 ## License
 
