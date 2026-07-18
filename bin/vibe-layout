@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+set -eu
+
+ACTION=${1:-}
+SESSION=${TMUX_PANE:+$(tmux display-message -p -t "$TMUX_PANE" '#{session_name}')}
+SESSION=${SESSION:-$(tmux display-message -p '#{session_name}')}
+
+case "$ACTION" in
+  directory)
+    DIRECTORY_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_directory_pane)
+    EDITOR_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_editor_pane)
+    [ -n "$DIRECTORY_PANE" ] && [ -n "$EDITOR_PANE" ] || exit 1
+
+    DIRECTORY_WINDOW=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{window_name}')
+    if [ "$DIRECTORY_WINDOW" = cockpit ]; then
+      tmux break-pane -d -s "$DIRECTORY_PANE" -n directory
+      tmux set-option -t "$SESSION" @vibe_directory_docked 0
+      tmux display-message 'Directory moved to its own window (Ctrl-a e to restore)'
+    else
+      tmux join-pane -h -b -l 23% -s "$DIRECTORY_PANE" -t "$EDITOR_PANE"
+      tmux set-option -t "$SESSION" @vibe_directory_docked 1
+      tmux select-pane -t "$DIRECTORY_PANE"
+      tmux display-message 'Directory restored beside Editor'
+    fi
+    ;;
+  *)
+    printf 'Usage: vibe-layout directory\n' >&2
+    exit 2
+    ;;
+esac

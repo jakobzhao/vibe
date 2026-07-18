@@ -1,0 +1,77 @@
+#!/usr/bin/env sh
+set -eu
+
+ACTION=${1:-}
+shift || true
+
+CONTEXT_FILE=${VIBE_CONTEXT_FILE:?vibe-context: VIBE_CONTEXT_FILE is not set}
+PROJECT_DIR=${VIBE_PROJECT_DIR:?vibe-context: VIBE_PROJECT_DIR is not set}
+SESSION=${TMUX_PANE:+$(tmux display-message -p -t "$TMUX_PANE" '#{session_name}')}
+SESSION=${SESSION:-$(tmux display-message -p '#{session_name}')}
+
+mkdir -p "$(dirname "$CONTEXT_FILE")"
+touch "$CONTEXT_FILE"
+
+context_count() {
+  awk 'END { print NR + 0 }' "$CONTEXT_FILE"
+}
+
+update_count() {
+  COUNT=$(context_count)
+  tmux set-option -t "$SESSION" @vibe_context_count "$COUNT"
+}
+
+relative_path() {
+  case "$1" in
+    "$PROJECT_DIR"/*) printf '%s\n' "${1#"$PROJECT_DIR"/}" ;;
+    *) printf '%s\n' "$1" ;;
+  esac
+}
+
+case "$ACTION" in
+  add)
+    [ "$#" -gt 0 ] || { printf 'No files selected.\n' >&2; exit 1; }
+    for PATHNAME do
+      [ -e "$PATHNAME" ] || { printf 'Missing: %s\n' "$PATHNAME" >&2; exit 1; }
+      DISPLAY_PATH=$(relative_path "$PATHNAME")
+      if ! awk -v path="$DISPLAY_PATH" '$0 == path { found = 1 } END { exit !found }' "$CONTEXT_FILE"; then
+        printf '%s\n' "$DISPLAY_PATH" >> "$CONTEXT_FILE"
+      fi
+    done
+    update_count
+    printf 'Context: %s file(s)\n' "$(context_count)"
+    ;;
+  clear)
+    : > "$CONTEXT_FILE"
+    update_count
+    printf 'Context cleared.\n'
+    ;;
+  send)
+    COUNT=$(context_count)
+    [ "$COUNT" -gt 0 ] || { printf 'Context is empty. Add files with c a.\n' >&2; exit 1; }
+    AGENT_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_active_agent)
+    [ -n "$AGENT_PANE" ] || { printf 'No active Agent pane.\n' >&2; exit 1; }
+    tmux display-message -p -t "$AGENT_PANE" '#{pane_id}' >/dev/null 2>&1 || {
+      printf 'The active Agent is no longer running.\n' >&2
+      exit 1
+    }
+
+    PROMPT=$(awk '
+      BEGIN { printf "Use these files as context: " }
+      NR > 1 { printf " | " }
+      { printf "%s", $0 }
+    ' "$CONTEXT_FILE")
+    printf %s "$PROMPT" | tmux load-buffer -
+    tmux paste-buffer -d -t "$AGENT_PANE"
+    tmux select-window -t "$AGENT_PANE"
+    tmux select-pane -t "$AGENT_PANE"
+    tmux display-message "Context staged for Agent ($COUNT files); review and press Enter to send."
+    ;;
+  count)
+    context_count
+    ;;
+  *)
+    printf 'Usage: vibe-context {add PATH...|send|clear|count}\n' >&2
+    exit 2
+    ;;
+esac
