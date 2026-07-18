@@ -18,16 +18,22 @@ bash -n "$ROOT/scripts/restore-if-saved.sh"
 grep -Fq 'tmux new-session -d -x "$INITIAL_WIDTH" -y "$INITIAL_HEIGHT"' "$ROOT/bin/vibe"
 grep -Fq "split-window -h -b -l 38%" "$ROOT/bin/vibe"
 grep -Fq "split-window -v -l 51%" "$ROOT/bin/vibe"
-grep -Fq "split-window -h -b -l 50%" "$ROOT/bin/vibe"
+grep -Fq "new-window -d -P -F '#{pane_id}'" "$ROOT/bin/vibe"
+grep -Fq "codex) PANE_TITLE='Agent'" "$ROOT/bin/vibe"
 grep -Fq "claude) PANE_TITLE='Claude'" "$ROOT/bin/vibe"
 grep -Fq "gemini) PANE_TITLE='Gemini'" "$ROOT/bin/vibe"
 grep -Fq "opencode) PANE_TITLE='OpenCode'" "$ROOT/bin/vibe"
 grep -Fq "aider) PANE_TITLE='Aider'" "$ROOT/bin/vibe"
 grep -Fq 'Windows 10/11 (WSL2)' "$ROOT/README.md"
-grep -Fq 'v0.2.1' "$ROOT/nvim/vibe.lua"
+grep -Fq 'v0.2.2' "$ROOT/nvim/vibe.lua"
 grep -Fq "set -g status off" "$ROOT/tmux.conf"
 ! grep -Fq "status on" "$ROOT/bin/vibe-ready"
 grep -Fq "@vibe_role 'Directory'" "$ROOT/bin/vibe"
+grep -Fq "@vibe_tab_kind 'directory'" "$ROOT/bin/vibe"
+grep -Fq "@vibe_tab_kind 'shell'" "$ROOT/bin/vibe"
+grep -Fq 'MouseDown1Border' "$ROOT/tmux.conf"
+grep -Fq '@vibe_tab_helper' "$ROOT/tmux.conf"
+grep -Fq '#[align=left]' "$ROOT/tmux.conf"
 ! grep -Fq "Directory · Favorites:" "$ROOT/bin/vibe"
 grep -Fq 'favorites) LABEL="Favorites"' "$ROOT/bin/vibe-favorite"
 grep -Fq 'directory) LABEL="Directory"' "$ROOT/bin/vibe-favorite"
@@ -51,7 +57,11 @@ done
 
 if command -v tmux >/dev/null 2>&1 && command -v yazi >/dev/null 2>&1; then
   printf '%s\n' 'Checking multi-agent runtime...'
-  "$ROOT/tests/check-runtime.sh"
+  if ! "$ROOT/tests/check-runtime.sh"; then
+    printf '%s\n' 'Runtime check failed; rerunning with shell trace...' >&2
+    sh -x "$ROOT/tests/check-runtime.sh"
+    exit 1
+  fi
 else
   printf '%s\n' 'Skipping runtime check (tmux or yazi is missing).'
 fi

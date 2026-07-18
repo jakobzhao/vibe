@@ -4,23 +4,23 @@ Vibe turns a terminal into a small, persistent workspace for coding with AI agen
 One command opens a file browser, an editor, and one or more agents in a tmux session:
 
 ```text
-┌────────┬─────────┬────────────────────────────────────┐
-│ Shell   │ Direct.│ Editor                             │
-├────────┴─────────┤                                    │
-│ Codex / agent    │                                    │
+┌──────────────────┬────────────────────────────────────┐
+│ Shell | Directory│ Editor                             │
+├──────────────────┤                                    │
+│ Agent            │                                    │
 └──────────────────┴────────────────────────────────────┘
 ```
 
 It is intentionally lightweight: POSIX shell scripts coordinate tmux, Yazi, and
 Neovim. Sessions survive terminal disconnects, files open from Yazi into the
-editor, the upper-left Shell uses a minimal `>` prompt for project commands, and any CLI agent can
-run in the lower-left pane.
+editor, and Shell and Directory switch as preserved tabs in the upper-left.
+The project Shell uses a minimal `>` prompt, and any CLI agent can run below it.
 
 ## Features
 
 - Persistent project workspaces powered by tmux
 - Yazi directory browser with reusable favorites
-- Ready-to-use project shell beside the directory browser
+- Preserved Shell and Directory tabs sharing one focused pane
 - Neovim or Nano as the Editor
 - Codex by default, with named support for Claude, Gemini, OpenCode, and Aider
 - Generic support for any persistent interactive CLI agent
@@ -129,8 +129,9 @@ dependency installation will follow the selected agent and editor.
 
 Vibe starts agent commands exactly as supplied. Codex receives optional compact
 UI settings; all other agents retain their native interface. Install and
-authenticate each agent CLI before selecting it. Recognized pane titles include
-Codex, Claude, Gemini, OpenCode, and Aider, while any other persistent
+authenticate each agent CLI before selecting it. The default Codex pane is
+labeled Agent. Other recognized pane titles include Claude, Gemini, OpenCode,
+and Aider, while any other persistent
 interactive command uses its executable name.
 
 Inside Vibe, press `Ctrl-a` and then:
@@ -143,9 +144,10 @@ Inside Vibe, press `Ctrl-a` and then:
 | `r` | Reload tmux configuration |
 | `|` / `-` | Split the current pane |
 
-In Directory, `Enter` opens the selected file in Editor. Press `f` or click the
-Directory pane title to toggle Favorites. Use `b a` to add an item and `b d` to
-remove one. In Editor, `:q` closes the current file and returns to the Vibe welcome
+Click `Shell` or `Directory` in the upper-left pane title to switch tabs; only
+the selected tab is visible, and both keep their running state. In Directory,
+`Enter` opens the selected file in Editor. Press `f` to toggle Favorites. Use
+`b a` to add an item and `b d` to remove one. In Editor, `:q` closes the current file and returns to the Vibe welcome
 screen; `:q!` discards unsaved changes and returns there. Use `Ctrl-a Q` to stop
 the complete workspace.
 
