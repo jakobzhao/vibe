@@ -201,7 +201,7 @@ local compact_welcome_content = {
 local welcome_footer = {
   { value = "Bo Zhao  ·  UW Humanistic GIS Lab", highlight = "VibeMeta" },
   { value = "https://hgis.uw.edu", url = "https://hgis.uw.edu", highlight = "VibeLink" },
-  { value = "v0.2.2", highlight = "VibeVersion" },
+  { value = "v0.2.3", highlight = "VibeVersion" },
 }
 
 local welcome_buf

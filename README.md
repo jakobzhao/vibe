@@ -5,7 +5,7 @@ One command opens a file browser, an editor, and one or more agents in a tmux se
 
 ```text
 ┌──────────────────┬────────────────────────────────────┐
-│ Shell | Directory│ Editor                             │
+│ Shell | Explorer │ Editor                             │
 ├──────────────────┤                                    │
 │ Agent            │                                    │
 └──────────────────┴────────────────────────────────────┘
@@ -13,14 +13,14 @@ One command opens a file browser, an editor, and one or more agents in a tmux se
 
 It is intentionally lightweight: POSIX shell scripts coordinate tmux, Yazi, and
 Neovim. Sessions survive terminal disconnects, files open from Yazi into the
-editor, and Shell and Directory switch as preserved tabs in the upper-left.
+editor, and Shell and Explorer switch as preserved tabs in the upper-left.
 The project Shell uses a minimal `>` prompt, and any CLI agent can run below it.
 
 ## Features
 
 - Persistent project workspaces powered by tmux
 - Yazi directory browser with reusable favorites
-- Preserved Shell and Directory tabs sharing one focused pane
+- Preserved Shell and Explorer tabs sharing one focused pane
 - Neovim or Nano as the Editor
 - Codex by default, with named support for Claude, Gemini, OpenCode, and Aider
 - Generic support for any persistent interactive CLI agent
@@ -144,8 +144,8 @@ Inside Vibe, press `Ctrl-a` and then:
 | `r` | Reload tmux configuration |
 | `|` / `-` | Split the current pane |
 
-Click `Shell` or `Directory` in the upper-left pane title to switch tabs; only
-the selected tab is visible, and both keep their running state. In Directory,
+Click `Shell` or `Explorer` in the upper-left pane title to switch tabs; only
+the selected tab is visible, and both keep their running state. In Explorer,
 `Enter` opens the selected file in Editor. Press `f` to toggle Favorites. Use
 `b a` to add an item and `b d` to remove one. In Editor, `:q` closes the current file and returns to the Vibe welcome
 screen; `:q!` discards unsaved changes and returns there. Use `Ctrl-a Q` to stop

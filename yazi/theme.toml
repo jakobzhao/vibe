@@ -74,7 +74,7 @@ desc = { fg = "#8d91a5" }
 hovered = { fg = "#141729", bg = "#21b568", bold = true }
 footer = { fg = "#e2e3e8", bg = "#343851" }
 
-# Override Yazi's blue-heavy defaults so the directory pane reads as one
+# Override Yazi's blue-heavy defaults so Explorer reads as one
 # Termius Dark surface. Keep semantic color only for exceptional file types.
 [filetype]
 rules = [
