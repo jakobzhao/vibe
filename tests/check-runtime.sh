@@ -61,7 +61,7 @@ done
 PANES=$(tmux list-panes -t "=$SESSION:cockpit" -F '#{@vibe_role}|#{pane_dead}|#{pane_current_command}')
 printf '%s\n' "$PANES" | grep -Eq '^Agent\|0\|.+$'
 printf '%s\n' "$PANES" | grep -Eq '^OpenCode\|0\|.+$'
-printf '%s\n' "$PANES" | grep -Fqx 'Directory|0|yazi'
+printf '%s\n' "$PANES" | grep -Fqx 'Explorer|0|yazi'
 ! printf '%s\n' "$PANES" | grep -Eq '^Shell\|'
 printf '%s\n' "$PANES" | grep -Fqx 'Editor|0|nvim'
 [ "$(tmux show-option -qv -t "$SESSION" status)" = off ]
@@ -78,18 +78,19 @@ SHELL_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_shell_pane)
 [ "$(tmux show-option -pqv -t "$SHELL_PANE" @vibe_tab_helper)" = "$ROOT/bin/vibe-tab" ]
 BORDER=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{E:pane-border-format}')
 printf '%s\n' "$BORDER" | grep -Fq Shell
-printf '%s\n' "$BORDER" | grep -Fq Directory
+printf '%s\n' "$BORDER" | grep -Fq Explorer
 
 DIRECTORY_PID=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{pane_pid}')
 SHELL_PID=$(tmux display-message -p -t "$SHELL_PANE" '#{pane_pid}')
 DIRECTORY_LEFT=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{pane_left}')
+DIRECTORY_TOP=$(tmux display-message -p -t "$DIRECTORY_PANE" '#{pane_top}')
 tmux run-shell -t "$DIRECTORY_PANE" \
-  "\"#{@vibe_tab_helper}\" mouse \"#{session_name}\" \"$((DIRECTORY_LEFT + 4))\" \"$DIRECTORY_LEFT\" \"#{pane_id}\""
+  "\"#{@vibe_tab_helper}\" mouse-pane \"#{session_name}\" \"$((DIRECTORY_LEFT + 4))\" \"$DIRECTORY_LEFT\" \"$((DIRECTORY_TOP - 1))\" \"$DIRECTORY_TOP\" \"#{pane_id}\""
 [ "$(tmux display-message -p -t "$SHELL_PANE" '#{window_id}')" = "$COCKPIT_WINDOW" ]
 [ "$(tmux display-message -p -t "$DIRECTORY_PANE" '#{window_id}')" != "$COCKPIT_WINDOW" ]
 SWITCHED_PANES=$(tmux list-panes -t "$COCKPIT_WINDOW" -F '#{@vibe_role}')
 printf '%s\n' "$SWITCHED_PANES" | grep -Fqx Shell
-! printf '%s\n' "$SWITCHED_PANES" | grep -Fqx Directory
+! printf '%s\n' "$SWITCHED_PANES" | grep -Fqx Explorer
 
 SHELL_LEFT=$(tmux display-message -p -t "$SHELL_PANE" '#{pane_left}')
 tmux run-shell -t "$SHELL_PANE" \

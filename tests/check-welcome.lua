@@ -8,7 +8,7 @@ assert(text:find("OPEN & NAVIGATE", 1, true))
 assert(text:find("EDIT", 1, true))
 assert(text:find("SESSION", 1, true))
 assert(text:find("UW Humanistic GIS Lab", 1, true))
-assert(not text:find("Choose a file in Directory", 1, true))
+assert(not text:find("Choose a file in Explorer", 1, true))
 assert(not text:find("Author", 1, true))
 assert(not text:find("Affiliation", 1, true))
 assert(not text:find("Website", 1, true))
@@ -65,7 +65,7 @@ assert(section_color == subtitle_color, "welcome headings do not share the pale 
 local values = {
   "Bo Zhao  ·  UW Humanistic GIS Lab",
   "https://hgis.uw.edu",
-  "v0.2.2",
+  "v0.2.3",
 }
 for _, value in ipairs(values) do
   local found_column

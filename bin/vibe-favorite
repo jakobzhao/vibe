@@ -53,7 +53,7 @@ case "${1:-}" in
     [ -n "$PANE" ] || exit 0
     case "$2" in
       favorites) LABEL="Favorites" ;;
-      directory) LABEL="Directory" ;;
+      directory) LABEL="Explorer" ;;
       *) exit 2 ;;
     esac
     tmux set-option -p -t "$PANE" @vibe_role "$LABEL"

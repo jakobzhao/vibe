@@ -31,7 +31,7 @@ Usage:
   vibe --list
 
 Without options, vibe opens a lightweight terminal IDE in the current directory:
-  Shell | Directory | Editor
+  Shell | Explorer  | Editor
   Agent             |
 
 Set VIBE_EDITOR=nano for a one-session Nano Editor panel.
@@ -227,7 +227,7 @@ tmux select-window -t "$SESSION:loading"
 
 # Match the default cockpit's visual balance: Editor gets roughly three fifths
 # of the window; Agent uses the lower-left, and the upper-left is one visible
-# tab slot. Directory starts there while Shell stays alive in a parking window.
+# tab slot. Explorer starts there while Shell stays alive in a parking window.
 DIR_PANE=$(tmux split-window -h -b -l 38% -P -F '#{pane_id}' -t "$MAIN_PANE" -c "$DIR")
 AI_PANE=$(tmux split-window -v -l 51% -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
 SHELL_PANE=$(tmux new-window -d -P -F '#{pane_id}' -t "$SESSION" -n tabs -c "$DIR")
@@ -250,10 +250,10 @@ tmux set-environment -t "$SESSION" VIBE_FAVORITES_DIR "$FAVORITES_DIR"
 tmux set-environment -t "$SESSION" VIBE_FAVORITE_HELPER "$VIBE_BIN_DIR/vibe-favorite"
 
 tmux select-pane -t "$MAIN_PANE" -T 'Editor'
-tmux select-pane -t "$DIR_PANE" -T 'Directory'
+tmux select-pane -t "$DIR_PANE" -T 'Explorer'
 tmux select-pane -t "$SHELL_PANE" -T 'Shell'
 tmux set-option -p -t "$MAIN_PANE" @vibe_role 'Editor'
-tmux set-option -p -t "$DIR_PANE" @vibe_role 'Directory'
+tmux set-option -p -t "$DIR_PANE" @vibe_role 'Explorer'
 tmux set-option -p -t "$SHELL_PANE" @vibe_role 'Shell'
 tmux set-option -p -t "$DIR_PANE" @vibe_tabs 1
 tmux set-option -p -t "$DIR_PANE" @vibe_tab_kind 'directory'

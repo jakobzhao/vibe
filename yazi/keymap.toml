@@ -4,6 +4,16 @@ run = "plugin vibe-favorites toggle"
 desc = "Show/hide Favorites"
 
 [[mgr.prepend_keymap]]
+on = [ "h" ]
+run = "plugin vibe-leave"
+desc = "Leave directory without crossing Explorer root"
+
+[[mgr.prepend_keymap]]
+on = "<Left>"
+run = "plugin vibe-leave"
+desc = "Leave directory without crossing Explorer root"
+
+[[mgr.prepend_keymap]]
 on = "<Enter>"
 run = "plugin vibe-open"
 desc = "Enter directory or open file in Main"
