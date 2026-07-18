@@ -13,6 +13,8 @@ trap 'rm -rf "$TMP_HOME"' EXIT HUP INT TERM
 
 HOME="$TMP_HOME" "$ROOT/bin/vibe" --help >/dev/null
 HOME="$TMP_HOME" "$ROOT/bin/install-vibe" --help >/dev/null
+nvim --headless -i NONE -u "$ROOT/nvim/vibe.lua" \
+  +"luafile $ROOT/tests/check-welcome.lua" +qa! >/dev/null 2>&1
 
 VIBE_CLOSE_TEST="$TMP_HOME/vibe-close.txt"
 printf '%s\n' original > "$VIBE_CLOSE_TEST"

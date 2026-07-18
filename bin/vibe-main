@@ -4,7 +4,8 @@ set -eu
 EDITOR_MODE=${VIBE_EDITOR:-nvim}
 
 if [ "$EDITOR_MODE" = nano ]; then
-  printf '\n  V I B E   M A I N  ·  Nano mode\n\n'
+  printf '\n  V I B E   E D I T O R  ·  Nano mode\n'
+  printf '  A minimalist terminal environment for vibe coding\n\n'
   printf '  Choose a file in Directory, then press Enter.\n'
   printf '  Exit Nano with Ctrl-X before opening another file.\n\n'
   exec "${SHELL:-/bin/sh}"
