@@ -67,14 +67,24 @@ done
 
 PANES=$(tmux list-panes -t "=$SESSION:cockpit" -F '#{@vibe_role}|#{pane_dead}|#{pane_current_command}')
 printf '%s\n' "$PANES" | grep -Eq '^Claude\|0\|.+$'
-printf '%s\n' "$PANES" | grep -Eq '^Directory .*\|0\|yazi$'
+printf '%s\n' "$PANES" | grep -Fqx 'Directory|0|yazi'
 printf '%s\n' "$PANES" | grep -Fqx 'Editor|0|nvim'
 [ "$(printf '%s\n' "$PANES" | wc -l | tr -d ' ')" -eq 3 ]
 tmux list-panes -s -t "=$SESSION" -F '#{@vibe_role}|#{pane_dead}|#{pane_current_command}' |
   grep -Eq '^OpenCode\|0\|.+$'
 tmux show-hooks -g pane-focus-in | grep -Fq '@vibe_active_agent'
+[ "$(tmux show-option -qv -t "$SESSION" status)" = on ]
 
 DIRECTORY_PANE=$(tmux show-option -qv -t "$SESSION" @vibe_directory_pane)
+VIBE_DIRECTORY_PANE="$DIRECTORY_PANE" \
+VIBE_FAVORITES_DIR="$TEST_HOME/favorites" \
+  "$ROOT/bin/vibe-favorite" title favorites
+[ "$(tmux show-option -pqv -t "$DIRECTORY_PANE" @vibe_role)" = Favorites ]
+VIBE_DIRECTORY_PANE="$DIRECTORY_PANE" \
+VIBE_FAVORITES_DIR="$TEST_HOME/favorites" \
+  "$ROOT/bin/vibe-favorite" title directory
+[ "$(tmux show-option -pqv -t "$DIRECTORY_PANE" @vibe_role)" = Directory ]
+
 TMUX_PANE="$DIRECTORY_PANE" "$ROOT/bin/vibe-layout" directory
 [ "$(tmux display-message -p -t "$DIRECTORY_PANE" '#{window_name}')" = directory ]
 TMUX_PANE="$DIRECTORY_PANE" "$ROOT/bin/vibe-layout" directory

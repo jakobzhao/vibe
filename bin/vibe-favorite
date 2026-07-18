@@ -51,10 +51,9 @@ case "${1:-}" in
     [ "$#" -eq 2 ] || exit 2
     PANE=${VIBE_DIRECTORY_PANE:-${TMUX_PANE:-}}
     [ -n "$PANE" ] || exit 0
-    COUNT=$(count_favorites)
     case "$2" in
-      favorites) LABEL="Favorites · $COUNT" ;;
-      directory) LABEL="Directory · Favorites: $COUNT" ;;
+      favorites) LABEL="Favorites" ;;
+      directory) LABEL="Directory" ;;
       *) exit 2 ;;
     esac
     tmux set-option -p -t "$PANE" @vibe_role "$LABEL"
