@@ -4,28 +4,27 @@ Vibe turns a terminal into a small, persistent workspace for coding with AI agen
 One command opens a file browser, an editor, and one or more agents in a tmux session:
 
 ```text
-┌──────────────┬──────────────────────────┬──────────────────┐
-│ Directory    │ Editor                   │ Agent            │
-└──────────────┴──────────────────────────┴──────────────────┘
+┌────────┬─────────┬────────────────────────────────────┐
+│ Shell   │ Direct.│ Editor                             │
+├────────┴─────────┤                                    │
+│ Codex / agent    │                                    │
+└──────────────────┴────────────────────────────────────┘
 ```
 
 It is intentionally lightweight: POSIX shell scripts coordinate tmux, Yazi, and
 Neovim. Sessions survive terminal disconnects, files open from Yazi into the
-editor, selected files can be staged as context in the active agent, and Git
-changes open as a navigable review list. A project Shell appears on demand so
-the three core work areas retain useful widths.
+editor, the upper-left Shell uses a minimal `>` prompt for project commands, and any CLI agent can
+run in the lower-left pane.
 
 ## Features
 
 - Persistent project workspaces powered by tmux
 - Yazi directory browser with reusable favorites
-- Context shelf that safely stages file paths in the active agent
-- Git change review, diff navigation, and one-key test runs
-- On-demand project Shell popup
+- Ready-to-use project shell beside the directory browser
 - Neovim or Nano as the Editor
 - Codex by default, with named support for Claude, Gemini, OpenCode, and Aider
 - Generic support for any persistent interactive CLI agent
-- Multiple agents in separate tmux windows
+- Multiple agents in one workspace
 - One-command Git worktrees for isolated tasks
 - Mouse and keyboard navigation
 - Cloud-safe browsing mode that avoids reading file contents until you open them
@@ -123,7 +122,6 @@ export VIBE_AGENT=claude
 export VIBE_EDITOR=nano
 export VIBE_COMPACT_UI=0  # restore native Codex/Neovim status bars
 export VIBE_ANIMATIONS=0  # disable the subtle VIBE title animation
-export VIBE_TEST_COMMAND='npm run test:unit'  # override automatic test detection
 ```
 
 Set these variables before running the installer too; validation and automatic
@@ -142,36 +140,14 @@ Inside Vibe, press `Ctrl-a` and then:
 | `h/j/k/l` | Move between panes |
 | `d` | Detach and leave the workspace running |
 | `Q` | Stop the Vibe session |
-| `e` | Hide Directory in its own window, or restore it beside Editor |
-| `s` | Open a project Shell popup |
-| `g` | Review Git changes in Editor |
-| `t` | Run the detected project test command |
 | `r` | Reload tmux configuration |
 | `|` / `-` | Split the current pane |
 
 In Directory, `Enter` opens the selected file in Editor. Press `f` or click the
 Directory pane title to toggle Favorites. Use `b a` to add an item and `b d` to
-remove one.
-
-Use Space in Directory to select one or more files, then press `c a` to add them
-to the Context shelf. Press `c s` to paste a single-line context prompt into the
-most recently focused Agent. Vibe deliberately does not press Enter: review or
-extend the prompt, then send it yourself. Press `c c` to clear Context. The
-status line shows the current `ctx` count.
-
-`Ctrl-a g` opens changed and untracked files in Neovim's quickfix list. Press
-Enter to jump to a file, `d` to open its diff in a temporary tab, and `r` to
-refresh the list. `Ctrl-a t` runs `VIBE_TEST_COMMAND` or detects common test
-commands for Vibe, npm, Cargo, Go, Python, and Make projects.
-
-Additional agents run in separate tmux windows instead of shrinking the primary
-Agent pane. Use `Ctrl-a n` and `Ctrl-a p`, the window numbers, or the clickable
-status line to switch agents. On terminals narrower than 110 columns, Directory
-starts in its own window; `Ctrl-a e` docks it when desired.
-
-In Editor, `:q` closes the current file and returns to the Vibe welcome screen;
-`:q!` discards unsaved changes and returns there. Use `Ctrl-a Q` to stop the
-complete workspace.
+remove one. In Editor, `:q` closes the current file and returns to the Vibe welcome
+screen; `:q!` discards unsaved changes and returns there. Use `Ctrl-a Q` to stop
+the complete workspace.
 
 ## Update
 

@@ -5,15 +5,11 @@ SESSION=${1:?vibe-ready: session is not set}
 SOCKET=${2:?vibe-ready: nvim socket is not set}
 DIRECTORY_PANE=${3:?vibe-ready: directory pane is not set}
 MAIN_PANE=${4:?vibe-ready: main pane is not set}
-FOCUS_PANE=${5:?vibe-ready: focus pane is not set}
-shift 5
+shift 4
 
 reveal_cockpit() {
   tmux has-session -t "=$SESSION" 2>/dev/null || return 0
-  if [ "${VIBE_COMPACT_UI:-1}" = 1 ]; then
-    tmux set-option -t "$SESSION" status on 2>/dev/null || true
-  fi
-  tmux select-pane -t "$FOCUS_PANE" 2>/dev/null || true
+  tmux select-pane -t "$DIRECTORY_PANE" 2>/dev/null || true
   tmux set-option -t "$SESSION" @vibe_ready 1 2>/dev/null || true
 }
 
