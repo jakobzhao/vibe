@@ -20,17 +20,17 @@ trap 'rm -rf "$TMP_HOME"' EXIT HUP INT TERM
 
 HOME="$TMP_HOME" "$ROOT/bin/vibe" --help >/dev/null
 HOME="$TMP_HOME" "$ROOT/bin/install-vibe" --help >/dev/null
+printf '%s\n' 'Checking welcome screen...'
 nvim --headless -i NONE -u "$ROOT/nvim/vibe.lua" \
-  -l "$ROOT/tests/check-welcome.lua" >/dev/null 2>&1
+  -l "$ROOT/tests/check-welcome.lua"
 
 VIBE_CLOSE_TEST="$TMP_HOME/vibe-close.txt"
 printf '%s\n' original > "$VIBE_CLOSE_TEST"
-nvim --headless -i NONE -u "$ROOT/nvim/vibe.lua" "$VIBE_CLOSE_TEST" \
-  -l "$ROOT/tests/check-close.lua" clean >/dev/null 2>&1
-nvim --headless -i NONE -u "$ROOT/nvim/vibe.lua" "$VIBE_CLOSE_TEST" \
-  -l "$ROOT/tests/check-close.lua" modified >/dev/null 2>&1
-nvim --headless -i NONE -u "$ROOT/nvim/vibe.lua" "$VIBE_CLOSE_TEST" \
-  -l "$ROOT/tests/check-close.lua" force >/dev/null 2>&1
+for scenario in clean modified force; do
+  printf 'Checking close behavior: %s...\n' "$scenario"
+  VIBE_ANIMATIONS=0 nvim --headless -i NONE -u "$ROOT/nvim/vibe.lua" "$VIBE_CLOSE_TEST" \
+    -l "$ROOT/tests/check-close.lua" "$scenario"
+done
 
 if find "$ROOT" -type f -not -path "$ROOT/.git/*" -not -path "$ROOT/tests/check.sh" -not -name README.md \
   -exec grep -En '/Users/|locaphilia|jakobzhao@gmail|GoogleDrive-' {} +; then

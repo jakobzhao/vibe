@@ -18,3 +18,5 @@ elseif scenario == "force" then
 else
   error("unknown close scenario: " .. tostring(scenario))
 end
+
+vim.cmd("qa!")

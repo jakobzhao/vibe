@@ -25,5 +25,6 @@ jobs:
               sudo apt-get install -y neovim
             fi
           fi
+          nvim --version | head -n 1
       - name: Check scripts
         run: ./tests/check.sh

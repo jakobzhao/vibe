@@ -53,3 +53,5 @@ for index = 1, 4 do
   local animated_color = vim.api.nvim_get_hl(0, { name = "VibeTitle" .. index }).fg
   assert(animated_color ~= initial_title_colors[index], "VIBE letter color did not animate")
 end
+
+vim.cmd("qa!")
