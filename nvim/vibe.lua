@@ -94,7 +94,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     }
     local footer = {
       { "Author       Bo Zhao", "VibeHint" },
-      { "Affiliation  University of Washington", "VibeHint" },
+      { "Affiliation  UW Humanistic GIS Lab · https://hgis.uw.edu", "VibeHint" },
       { "Version      0.1.0", "VibeHint" },
     }
 

@@ -4,21 +4,23 @@ Vibe turns a terminal into a small, persistent workspace for coding with AI agen
 One command opens a file browser, an editor, and one or more agents in a tmux session:
 
 ```text
-┌──────────────────┬────────────────────────────────────┐
-│ Directory        │ Main editor                        │
-├──────────────────┤                                    │
+┌────────┬─────────┬────────────────────────────────────┐
+│ Direct.│ Shell   │ Main editor                        │
+├────────┴─────────┤                                    │
 │ Codex / agent    │                                    │
 └──────────────────┴────────────────────────────────────┘
 ```
 
 It is intentionally lightweight: POSIX shell scripts coordinate tmux, Yazi, and
 Neovim. Sessions survive terminal disconnects, files open from Yazi into the main
-editor, and any CLI agent can run in the lower-left pane.
+editor, the upper-left Shell is ready for project commands, and any CLI agent can
+run in the lower-left pane.
 
 ## Features
 
 - Persistent project workspaces powered by tmux
 - Yazi directory browser with reusable favorites
+- Ready-to-use project shell beside the directory browser
 - Neovim or Nano as the main editor
 - Codex by default, with support for Claude or any interactive CLI agent
 - Multiple agents in one workspace
