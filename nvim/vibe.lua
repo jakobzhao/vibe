@@ -162,14 +162,17 @@ local welcome_content = {
   { "", nil },
   { "", nil },
   { "", nil },
-  { "OPEN & NAVIGATE", "VibeSection" },
-  { "Enter opens  ·  mouse focuses  ·  Ctrl-a h/j/k/l moves", "VibeInstruction" },
+  { "OPEN & CONTEXT", "VibeSection" },
+  { "Enter opens  ·  c a adds context  ·  c s stages it in Agent", "VibeInstruction" },
   { "", nil },
   { "EDIT", "VibeSection" },
   { "i insert  ·  Esc normal  ·  :w save  ·  :q close", "VibeInstruction" },
   { "", nil },
+  { "REVIEW & TEST", "VibeSection" },
+  { "Ctrl-a g reviews changes  ·  Ctrl-a t runs tests", "VibeInstruction" },
+  { "", nil },
   { "SESSION", "VibeSection" },
-  { "drag borders to resize  ·  Ctrl-a d detach  ·  Ctrl-a Q quit", "VibeInstruction" },
+  { "Ctrl-a e Directory  ·  Ctrl-a s Shell  ·  Ctrl-a d detach", "VibeInstruction" },
 }
 
 local compact_welcome_content = {
@@ -183,25 +186,17 @@ local compact_welcome_content = {
   { "", nil },
   { "A focused terminal workspace", "VibeSubtitle" },
   { "", nil },
-  { "", nil },
-  { "", nil },
-  { "OPEN & NAVIGATE", "VibeSection" },
-  { "Enter opens  ·  mouse focuses", "VibeInstruction" },
-  { "Ctrl-a h/j/k/l moves", "VibeInstruction" },
-  { "", nil },
-  { "EDIT", "VibeSection" },
-  { "i insert  ·  Esc normal", "VibeInstruction" },
-  { ":w save  ·  :q close", "VibeInstruction" },
-  { "", nil },
-  { "SESSION", "VibeSection" },
-  { "drag borders to resize", "VibeInstruction" },
+  { "Enter open  ·  c a context  ·  c s Agent", "VibeInstruction" },
+  { "i insert  ·  Esc normal  ·  :w save  ·  :q close", "VibeInstruction" },
+  { "Ctrl-a g review  ·  Ctrl-a t test", "VibeInstruction" },
+  { "Ctrl-a e Directory  ·  Ctrl-a s Shell", "VibeInstruction" },
   { "Ctrl-a d detach  ·  Ctrl-a Q quit", "VibeInstruction" },
 }
 
 local welcome_footer = {
   { value = "Bo Zhao  ·  UW Humanistic GIS Lab", highlight = "VibeMeta" },
   { value = "https://hgis.uw.edu", url = "https://hgis.uw.edu", highlight = "VibeLink" },
-  { value = "v0.2.1", highlight = "VibeVersion" },
+  { value = "v0.3.0", highlight = "VibeVersion" },
 }
 
 local welcome_buf
@@ -237,7 +232,7 @@ local function render_welcome()
 
   local width = vim.api.nvim_win_get_width(win)
   local height = vim.api.nvim_win_get_height(win)
-  local content = width < 65 and compact_welcome_content or welcome_content
+  local content = (width < 65 or height < 32) and compact_welcome_content or welcome_content
   local footer_gap = 2
   local bottom_margin = 1
   local content_height = math.max(1, height - #welcome_footer - footer_gap - bottom_margin)
@@ -413,6 +408,116 @@ vim.cmd([[
   cnoreabbrev <expr> q getcmdtype() ==# ':' && getcmdline() ==# 'q' ? 'VibeClose' : 'q'
   cnoreabbrev <expr> quit getcmdtype() ==# ':' && getcmdline() ==# 'quit' ? 'VibeClose' : 'quit'
 ]])
+
+local function project_dir()
+  return vim.env.VIBE_PROJECT_DIR or vim.fn.getcwd()
+end
+
+local function git_output(arguments)
+  local command = { "git", "-c", "core.quotePath=false", "-C", project_dir() }
+  vim.list_extend(command, arguments)
+  local output = vim.fn.systemlist(command)
+  return output, vim.v.shell_error
+end
+
+
+local function review_items()
+  local lines, status = git_output({ "status", "--short", "--untracked-files=all" })
+  if status ~= 0 then
+    return nil, table.concat(lines, "\n")
+  end
+
+  local items = {}
+  for _, line in ipairs(lines) do
+    local state = line:sub(1, 2)
+    local path = line:sub(4)
+    local arrow = path:find(" -> ", 1, true)
+    if arrow then
+      path = path:sub(arrow + 4)
+    end
+    if path:sub(1, 1) == '"' and path:sub(-1) == '"' then
+      path = path:sub(2, -2)
+    end
+    table.insert(items, {
+      filename = project_dir() .. "/" .. path,
+      lnum = 1,
+      col = 1,
+      text = state .. "  " .. path,
+    })
+  end
+  return items, nil
+end
+
+local function selected_review_file()
+  if vim.bo.buftype == "quickfix" then
+    local list = vim.fn.getqflist({ idx = 0, items = 1 })
+    local item = list.items[list.idx]
+    if item and item.bufnr and item.bufnr > 0 then
+      return vim.api.nvim_buf_get_name(item.bufnr)
+    end
+  end
+
+  local name = vim.api.nvim_buf_get_name(0)
+  if name ~= "" and vim.bo.buftype == "" then
+    return name
+  end
+  return nil
+end
+
+local function show_review_diff()
+  local path = selected_review_file()
+  if not path then
+    vim.notify("Choose a changed file first", vim.log.levels.WARN)
+    return
+  end
+
+  local relative = vim.fn.fnamemodify(path, ":.")
+  if path:sub(1, #project_dir() + 1) == project_dir() .. "/" then
+    relative = path:sub(#project_dir() + 2)
+  end
+  local lines, status = git_output({ "diff", "--no-ext-diff", "HEAD", "--", relative })
+  if status ~= 0 or #lines == 0 then
+    lines = vim.fn.systemlist({ "git", "-c", "core.quotePath=false", "-C", project_dir(),
+      "diff", "--no-index", "--", "/dev/null", path })
+  end
+  if #lines == 0 then
+    lines = { "No diff for " .. relative }
+  end
+
+  vim.cmd("tabnew")
+  local buf = vim.api.nvim_get_current_buf()
+  vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].swapfile = false
+  vim.bo[buf].filetype = "diff"
+  vim.bo[buf].modifiable = true
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].readonly = true
+  vim.keymap.set("n", "q", "<Cmd>tabclose<CR>", { buffer = buf, silent = true })
+  set_pane_title("Review · " .. vim.fn.fnamemodify(relative, ":t"))
+end
+
+vim.api.nvim_create_user_command("VibeReviewDiff", show_review_diff, { force = true })
+
+vim.api.nvim_create_user_command("VibeReview", function()
+  local items, err = review_items()
+  if not items then
+    vim.notify(err ~= "" and err or "Not a Git repository", vim.log.levels.ERROR)
+    return
+  end
+  if #items == 0 then
+    vim.notify("Working tree is clean", vim.log.levels.INFO)
+    return
+  end
+
+  vim.fn.setqflist({}, " ", { title = "Vibe Review", items = items })
+  vim.cmd("botright copen")
+  local buf = vim.api.nvim_get_current_buf()
+  vim.keymap.set("n", "d", "<Cmd>VibeReviewDiff<CR>", { buffer = buf, silent = true })
+  vim.keymap.set("n", "r", "<Cmd>VibeReview<CR>", { buffer = buf, silent = true })
+  set_pane_title("Review · " .. #items .. " changed")
+end, { force = true })
 
 vim.api.nvim_create_autocmd("VimEnter", {
   group = vibe_group,

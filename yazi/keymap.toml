@@ -17,3 +17,18 @@ desc = "Add hovered item to Favorites"
 on = [ "b", "d" ]
 run = "plugin vibe-favorites remove"
 desc = "Remove hovered item from Favorites"
+
+[[mgr.prepend_keymap]]
+on = [ "c", "a" ]
+run = "plugin vibe-context add"
+desc = "Add selected files to Agent Context"
+
+[[mgr.prepend_keymap]]
+on = [ "c", "s" ]
+run = "plugin vibe-context send"
+desc = "Stage Context in the active Agent"
+
+[[mgr.prepend_keymap]]
+on = [ "c", "c" ]
+run = "plugin vibe-context clear"
+desc = "Clear Agent Context"
