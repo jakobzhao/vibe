@@ -57,10 +57,10 @@ done
   exit 1
 }
 
-PANES=$(tmux list-panes -t "=$SESSION:cockpit" -F '#{@vibe_role}|#{pane_current_command}')
-printf '%s\n' "$PANES" | grep -Fqx 'Claude|tail'
-printf '%s\n' "$PANES" | grep -Fqx 'OpenCode|tail'
-printf '%s\n' "$PANES" | grep -Eq '^Directory .*\|yazi$'
-printf '%s\n' "$PANES" | grep -Fqx 'Editor|nvim'
+PANES=$(tmux list-panes -t "=$SESSION:cockpit" -F '#{@vibe_role}|#{pane_dead}|#{pane_current_command}')
+printf '%s\n' "$PANES" | grep -Eq '^Claude\|0\|.+$'
+printf '%s\n' "$PANES" | grep -Eq '^OpenCode\|0\|.+$'
+printf '%s\n' "$PANES" | grep -Eq '^Directory .*\|0\|yazi$'
+printf '%s\n' "$PANES" | grep -Fqx 'Editor|0|nvim'
 
 printf '%s\n' 'Vibe multi-agent runtime check passed.'
