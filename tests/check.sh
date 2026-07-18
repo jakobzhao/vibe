@@ -16,9 +16,9 @@ done
 bash -n "$ROOT/scripts/restore-if-saved.sh"
 
 grep -Fq 'tmux new-session -d -x "$INITIAL_WIDTH" -y "$INITIAL_HEIGHT"' "$ROOT/bin/vibe"
-grep -Fq "split-window -h -b -p 38" "$ROOT/bin/vibe"
-grep -Fq "split-window -v -p 51" "$ROOT/bin/vibe"
-grep -Fq "split-window -h -b -p 50" "$ROOT/bin/vibe"
+grep -Fq "split-window -h -b -l 38%" "$ROOT/bin/vibe"
+grep -Fq "split-window -v -l 51%" "$ROOT/bin/vibe"
+grep -Fq "split-window -h -b -l 50%" "$ROOT/bin/vibe"
 grep -Fq "claude) PANE_TITLE='Claude'" "$ROOT/bin/vibe"
 grep -Fq "gemini) PANE_TITLE='Gemini'" "$ROOT/bin/vibe"
 grep -Fq "opencode) PANE_TITLE='OpenCode'" "$ROOT/bin/vibe"
