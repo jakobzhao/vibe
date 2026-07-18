@@ -80,7 +80,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     end
 
     local content = {
-      { "V I B E   M A I N", "VibeTitle" },
+      { "V I B E", "VibeTitle" },
       { "", nil },
       { "Choose a file in the Directory panel", "VibeHint" },
       { "", nil },
@@ -91,6 +91,11 @@ vim.api.nvim_create_autocmd("VimEnter", {
       { "Mouse: click panels  ·  Drag borders to resize", "VibeHint" },
       { "", nil },
       { "Ctrl-a d detach  ·  Ctrl-a Q quit vibe", "VibeHint" },
+    }
+    local footer = {
+      { "Author       Bo Zhao", "VibeHint" },
+      { "Affiliation  University of Washington", "VibeHint" },
+      { "Version      0.1.0", "VibeHint" },
     }
 
     vim.bo.buftype = "nofile"
@@ -113,8 +118,10 @@ vim.api.nvim_create_autocmd("VimEnter", {
 
       local width = vim.api.nvim_win_get_width(win)
       local height = vim.api.nvim_win_get_height(win)
-      local total_height = #content
-      local top = math.max(0, math.floor((height - total_height) / 2))
+      local footer_gap = 2
+      local bottom_margin = 1
+      local content_height = math.max(1, height - #footer - footer_gap - bottom_margin)
+      local top = math.max(0, math.floor((content_height - #content) / 2))
       local lines = {}
       for _ = 1, top do
         table.insert(lines, "")
@@ -123,6 +130,20 @@ vim.api.nvim_create_autocmd("VimEnter", {
         local text = item[1]
         local padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth(text)) / 2))
         table.insert(lines, string.rep(" ", padding) .. text)
+      end
+
+      local footer_start = math.max(#lines + footer_gap, height - #footer - bottom_margin)
+      while #lines < footer_start do
+        table.insert(lines, "")
+      end
+
+      local footer_width = 0
+      for _, item in ipairs(footer) do
+        footer_width = math.max(footer_width, vim.fn.strdisplaywidth(item[1]))
+      end
+      local footer_padding = math.max(0, math.floor((width - footer_width) / 2))
+      for _, item in ipairs(footer) do
+        table.insert(lines, string.rep(" ", footer_padding) .. item[1])
       end
 
       vim.bo[welcome_buf].readonly = false
@@ -136,6 +157,18 @@ vim.api.nvim_create_autocmd("VimEnter", {
             -1,
             item[2],
             top + index - 1,
+            0,
+            -1
+          )
+        end
+      end
+      for index, item in ipairs(footer) do
+        if item[2] then
+          vim.api.nvim_buf_add_highlight(
+            welcome_buf,
+            -1,
+            item[2],
+            footer_start + index - 1,
             0,
             -1
           )
