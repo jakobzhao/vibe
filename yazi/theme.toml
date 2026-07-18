@@ -80,7 +80,7 @@ footer = { fg = "#e2e3e8", bg = "#343851" }
 rules = [
 	{ url = "*", is = "orphan", fg = "#f24e50", crossed = true },
 	{ url = "*", is = "link", fg = "#3ed7be" },
-	{ url = "*/", fg = "#21b568", bold = true },
+	{ url = "*/", fg = "#21b568" },
 	{ mime = "{audio,video}/*", fg = "#ff7dc5" },
 	{ mime = "image/*", fg = "#fdc47d" },
 	{ mime = "application/{zip,gzip,x-tar,x-7z-compressed,x-rar}", fg = "#eca855" },

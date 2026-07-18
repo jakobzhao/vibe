@@ -193,9 +193,25 @@ done <<EOF
 $AGENTS
 EOF
 
+# Build at the invoking terminal's real size. A detached tmux session otherwise
+# starts at 80x24 and distributes later growth evenly, which distorts the pane
+# percentages on large terminals.
+INITIAL_WIDTH=${COLUMNS:-}
+INITIAL_HEIGHT=${LINES:-}
+if [ -n "${TMUX:-}" ]; then
+  INITIAL_WIDTH=$(tmux display-message -p '#{client_width}' 2>/dev/null || true)
+  INITIAL_HEIGHT=$(tmux display-message -p '#{client_height}' 2>/dev/null || true)
+fi
+[ -n "$INITIAL_WIDTH" ] || INITIAL_WIDTH=$(tput cols 2>/dev/null || true)
+[ -n "$INITIAL_HEIGHT" ] || INITIAL_HEIGHT=$(tput lines 2>/dev/null || true)
+case "$INITIAL_WIDTH" in ''|*[!0-9]*) INITIAL_WIDTH=80 ;; esac
+case "$INITIAL_HEIGHT" in ''|*[!0-9]*) INITIAL_HEIGHT=24 ;; esac
+[ "$INITIAL_WIDTH" -ge 20 ] || INITIAL_WIDTH=80
+[ "$INITIAL_HEIGHT" -ge 10 ] || INITIAL_HEIGHT=24
+
 # Build the workspace behind a loading window, then reveal it only after every
 # program has painted its first interactive frame.
-MAIN_PANE=$(tmux new-session -d -P -F '#{pane_id}' -s "$SESSION" -c "$DIR" -n cockpit)
+MAIN_PANE=$(tmux new-session -d -x "$INITIAL_WIDTH" -y "$INITIAL_HEIGHT" -P -F '#{pane_id}' -s "$SESSION" -c "$DIR" -n cockpit)
 tmux set-option -t "$SESSION" status off
 tmux set-option -t "$SESSION" @vibe_dir "$DIR"
 tmux set-option -t "$SESSION" @vibe_agents "$(printf '%s' "$AGENTS" | tr '\n' ',')"
@@ -209,10 +225,11 @@ LOADING_COMMAND="exec $(shell_quote "$VIBE_BIN_DIR/vibe-loading") $(shell_quote 
 tmux respawn-pane -k -t "$LOADING_PANE" -c "$DIR" "$LOADING_COMMAND"
 tmux select-window -t "$SESSION:loading"
 
-# Editor owns the large right side. Shell and Directory split the upper-left;
-# agents use the taller lower-left workspace.
-DIR_PANE=$(tmux split-window -h -b -p 42 -P -F '#{pane_id}' -t "$MAIN_PANE" -c "$DIR")
-AI_PANE=$(tmux split-window -v -p 58 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
+# Match the default cockpit's visual balance: Editor gets roughly three fifths
+# of the window; the left side splits evenly by height, with Shell and
+# Directory sharing the upper row equally.
+DIR_PANE=$(tmux split-window -h -b -p 38 -P -F '#{pane_id}' -t "$MAIN_PANE" -c "$DIR")
+AI_PANE=$(tmux split-window -v -p 51 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
 SHELL_PANE=$(tmux split-window -h -b -p 50 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
 
 SOCKET_ROOT=${TMPDIR:-/tmp}

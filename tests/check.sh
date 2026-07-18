@@ -15,6 +15,11 @@ for script in "$ROOT"/bin/* "$ROOT"/install.sh; do
 done
 bash -n "$ROOT/scripts/restore-if-saved.sh"
 
+grep -Fq 'tmux new-session -d -x "$INITIAL_WIDTH" -y "$INITIAL_HEIGHT"' "$ROOT/bin/vibe"
+grep -Fq "split-window -h -b -p 38" "$ROOT/bin/vibe"
+grep -Fq "split-window -v -p 51" "$ROOT/bin/vibe"
+grep -Fq "split-window -h -b -p 50" "$ROOT/bin/vibe"
+
 TMP_HOME=$(mktemp -d "${TMPDIR:-/tmp}/vibe-check.XXXXXX")
 trap 'rm -rf "$TMP_HOME"' EXIT HUP INT TERM
 
