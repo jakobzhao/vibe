@@ -318,7 +318,7 @@ configure_paths() {
 
 install_files() {
   install_link "$VIBE_ROOT/tmux.conf" "$HOME/.tmux.conf"
-  for NAME in vibe vibe-context vibe-favorite vibe-layout vibe-loading vibe-main vibe-open vibe-popup vibe-ready vibe-review vibe-shell install-vibe; do
+  for NAME in vibe vibe-favorite vibe-loading vibe-main vibe-open vibe-ready vibe-shell install-vibe; do
     install_link "$BIN_SOURCE/$NAME" "$HOME/bin/$NAME"
   done
   install_link "$VIBE_ROOT/scripts/restore-if-saved.sh" "$HOME/bin/vibe-restore"

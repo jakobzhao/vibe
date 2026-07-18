@@ -1,12 +1,12 @@
 local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 local text = table.concat(lines, "\n")
 
-assert(text:find("A focused terminal workspace", 1, true))
+assert(text:find("A focused terminal workspace for vibe coding", 1, true))
 assert(text:find("\\      /", 1, true))
 assert(text:find("|------", 1, true))
-assert(text:find("c a context", 1, true))
-assert(text:find("Ctrl-a g review", 1, true))
-assert(text:find("Ctrl-a e Directory", 1, true))
+assert(text:find("OPEN & NAVIGATE", 1, true))
+assert(text:find("EDIT", 1, true))
+assert(text:find("SESSION", 1, true))
 assert(text:find("UW Humanistic GIS Lab", 1, true))
 assert(not text:find("Choose a file in Directory", 1, true))
 assert(not text:find("Author", 1, true))
@@ -39,6 +39,18 @@ assert(title_rows[1]:find("|----\\", title_left + 25, true) == title_left + 25,
 assert(title_rows[1]:find("|------", title_left + 37, true) == title_left + 37,
   "E is not at its fixed offset from V")
 
+local subtitle_row
+local navigation_row
+for row, line in ipairs(lines) do
+  if line:find("A focused terminal workspace for vibe coding", 1, true) then
+    subtitle_row = row
+  elseif line:find("OPEN & NAVIGATE", 1, true) then
+    navigation_row = row
+  end
+end
+assert(subtitle_row and navigation_row, "welcome sections are missing")
+assert(navigation_row - subtitle_row == 4, "subtitle and instructions do not have three blank lines")
+
 local normal_color = vim.api.nvim_get_hl(0, { name = "Normal" }).fg
 local instruction_color = vim.api.nvim_get_hl(0, { name = "VibeInstruction" }).fg
 local meta_color = vim.api.nvim_get_hl(0, { name = "VibeMeta" }).fg
@@ -53,7 +65,7 @@ assert(section_color == subtitle_color, "welcome headings do not share the pale 
 local values = {
   "Bo Zhao  ·  UW Humanistic GIS Lab",
   "https://hgis.uw.edu",
-  "v0.3.0",
+  "v0.2.1",
 }
 for _, value in ipairs(values) do
   local found_column
