@@ -60,7 +60,16 @@ done
 PANES=$(tmux list-panes -t "=$SESSION:cockpit" -F '#{@vibe_role}|#{pane_dead}|#{pane_current_command}')
 printf '%s\n' "$PANES" | grep -Eq '^Claude\|0\|.+$'
 printf '%s\n' "$PANES" | grep -Eq '^OpenCode\|0\|.+$'
-printf '%s\n' "$PANES" | grep -Eq '^Directory .*\|0\|yazi$'
+printf '%s\n' "$PANES" | grep -Fqx 'Directory|0|yazi'
 printf '%s\n' "$PANES" | grep -Fqx 'Editor|0|nvim'
+[ "$(tmux show-option -qv -t "$SESSION" status)" = off ]
+
+DIRECTORY_PANE=$(tmux list-panes -t "=$SESSION:cockpit" -F '#{pane_id}|#{@vibe_role}' |
+  awk -F '|' '$2 == "Directory" { print $1; exit }')
+[ -n "$DIRECTORY_PANE" ]
+VIBE_DIRECTORY_PANE="$DIRECTORY_PANE" \
+VIBE_FAVORITES_DIR="$TEST_HOME/favorites" \
+  "$ROOT/bin/vibe-favorite" title favorites
+[ "$(tmux show-option -pqv -t "$DIRECTORY_PANE" @vibe_role)" = Favorites ]
 
 printf '%s\n' 'Vibe multi-agent runtime check passed.'

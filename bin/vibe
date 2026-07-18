@@ -252,8 +252,7 @@ tmux select-pane -t "$MAIN_PANE" -T 'Editor'
 tmux select-pane -t "$DIR_PANE" -T 'Directory'
 tmux select-pane -t "$SHELL_PANE" -T 'Shell'
 tmux set-option -p -t "$MAIN_PANE" @vibe_role 'Editor'
-FAVORITES_COUNT=$(VIBE_FAVORITES_DIR="$FAVORITES_DIR" "$VIBE_BIN_DIR/vibe-favorite" count)
-tmux set-option -p -t "$DIR_PANE" @vibe_role "Directory · Favorites: $FAVORITES_COUNT"
+tmux set-option -p -t "$DIR_PANE" @vibe_role 'Directory'
 tmux set-option -p -t "$DIR_PANE" @vibe_favorites_click 1
 tmux set-option -p -t "$SHELL_PANE" @vibe_role 'Shell'
 MAIN_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_COMPACT_UI=$(shell_quote "$VIBE_COMPACT_UI") VIBE_ANIMATIONS=$(shell_quote "$VIBE_ANIMATIONS") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_NVIM_CONFIG=$(shell_quote "$VIBE_ROOT/nvim/vibe.lua") $(shell_quote "$VIBE_BIN_DIR/vibe-main")"
