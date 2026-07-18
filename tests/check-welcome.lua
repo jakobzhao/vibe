@@ -3,6 +3,11 @@ local text = table.concat(lines, "\n")
 
 assert(text:find("A minimalist terminal environment for vibe coding", 1, true))
 assert(text:find("UW Humanistic GIS Lab", 1, true))
+assert(not text:find("Choose a file in Directory", 1, true))
+assert(not text:find("Author", 1, true))
+assert(not text:find("Affiliation", 1, true))
+assert(not text:find("Website", 1, true))
+assert(not text:find("Version", 1, true))
 
 local values = {
   "Bo Zhao",
@@ -10,7 +15,6 @@ local values = {
   "https://hgis.uw.edu",
   "0.1.0",
 }
-local value_column
 for _, value in ipairs(values) do
   local found_column
   for _, line in ipairs(lines) do
@@ -20,8 +24,10 @@ for _, value in ipairs(values) do
     end
   end
   assert(found_column, "missing welcome metadata value: " .. value)
-  value_column = value_column or found_column
-  assert(found_column == value_column, "welcome metadata values are not aligned")
+  local expected_column = math.floor(
+    (vim.api.nvim_win_get_width(0) - vim.fn.strdisplaywidth(value)) / 2
+  ) + 1
+  assert(found_column == math.max(1, expected_column), "welcome metadata value is not centered: " .. value)
 end
 
 local has_website_link = false
@@ -33,7 +39,17 @@ for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(0, -1, 0, -1, { details = tr
 end
 assert(has_website_link, "welcome Website is not linked")
 
-local initial_title_color = vim.api.nvim_get_hl(0, { name = "VibeTitle" }).fg
+local initial_title_colors = {}
+for index = 1, 4 do
+  initial_title_colors[index] = vim.api.nvim_get_hl(0, { name = "VibeTitle" .. index }).fg
+end
+local unique_colors = {}
+for _, color in ipairs(initial_title_colors) do
+  unique_colors[color] = true
+end
+assert(vim.tbl_count(unique_colors) == 4, "VIBE letters do not start with distinct colors")
 vim.wait(700)
-local animated_title_color = vim.api.nvim_get_hl(0, { name = "VibeTitle" }).fg
-assert(animated_title_color ~= initial_title_color, "VIBE title color did not animate")
+for index = 1, 4 do
+  local animated_color = vim.api.nvim_get_hl(0, { name = "VibeTitle" .. index }).fg
+  assert(animated_color ~= initial_title_colors[index], "VIBE letter color did not animate")
+end

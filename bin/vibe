@@ -209,11 +209,11 @@ LOADING_COMMAND="exec $(shell_quote "$VIBE_BIN_DIR/vibe-loading") $(shell_quote 
 tmux respawn-pane -k -t "$LOADING_PANE" -c "$DIR" "$LOADING_COMMAND"
 tmux select-window -t "$SESSION:loading"
 
-# Editor owns the large right side. Directory and Shell share the upper-left;
+# Editor owns the large right side. Shell and Directory split the upper-left;
 # agents use the taller lower-left workspace.
 DIR_PANE=$(tmux split-window -h -b -p 42 -P -F '#{pane_id}' -t "$MAIN_PANE" -c "$DIR")
 AI_PANE=$(tmux split-window -v -p 58 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
-SHELL_PANE=$(tmux split-window -h -p 65 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
+SHELL_PANE=$(tmux split-window -h -b -p 50 -P -F '#{pane_id}' -t "$DIR_PANE" -c "$DIR")
 
 SOCKET_ROOT=${TMPDIR:-/tmp}
 SOCKET_ROOT=${SOCKET_ROOT%/}
@@ -241,10 +241,12 @@ tmux set-option -p -t "$DIR_PANE" @vibe_favorites_click 1
 tmux set-option -p -t "$SHELL_PANE" @vibe_role 'Shell'
 MAIN_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_COMPACT_UI=$(shell_quote "$VIBE_COMPACT_UI") VIBE_ANIMATIONS=$(shell_quote "$VIBE_ANIMATIONS") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_NVIM_CONFIG=$(shell_quote "$VIBE_ROOT/nvim/vibe.lua") $(shell_quote "$VIBE_BIN_DIR/vibe-main")"
 DIRECTORY_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_DIRECTORY_PANE=$(shell_quote "$DIR_PANE") VIBE_PROJECT_DIR=$(shell_quote "$DIR") VIBE_FAVORITES_DIR=$(shell_quote "$FAVORITES_DIR") VIBE_FAVORITE_HELPER=$(shell_quote "$VIBE_BIN_DIR/vibe-favorite") YAZI_CONFIG_HOME=$(shell_quote "$VIBE_ROOT/yazi") EDITOR=$(shell_quote "$VIBE_BIN_DIR/vibe-open") yazi ."
+SHELL_COMMAND="exec $(shell_quote "$VIBE_BIN_DIR/vibe-shell")"
 tmux send-keys -t "$MAIN_PANE" -l "$MAIN_COMMAND"
 tmux send-keys -t "$MAIN_PANE" Enter
 tmux send-keys -t "$DIR_PANE" -l "$DIRECTORY_COMMAND"
 tmux send-keys -t "$DIR_PANE" Enter
+tmux respawn-pane -k -t "$SHELL_PANE" -c "$DIR" "$SHELL_COMMAND"
 
 FIRST=1
 READY_SPECS=

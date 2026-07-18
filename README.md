@@ -5,7 +5,7 @@ One command opens a file browser, an editor, and one or more agents in a tmux se
 
 ```text
 ┌────────┬─────────┬────────────────────────────────────┐
-│ Direct.│ Shell   │ Editor                             │
+│ Shell   │ Direct.│ Editor                             │
 ├────────┴─────────┤                                    │
 │ Codex / agent    │                                    │
 └──────────────────┴────────────────────────────────────┘
@@ -13,7 +13,7 @@ One command opens a file browser, an editor, and one or more agents in a tmux se
 
 It is intentionally lightweight: POSIX shell scripts coordinate tmux, Yazi, and
 Neovim. Sessions survive terminal disconnects, files open from Yazi into the
-editor, the upper-left Shell is ready for project commands, and any CLI agent can
+editor, the upper-left Shell uses a minimal `>` prompt for project commands, and any CLI agent can
 run in the lower-left pane.
 
 ## Features

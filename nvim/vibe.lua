@@ -31,6 +31,7 @@ local palette = {
   green = "#21b568",
   cyan = "#3ed7be",
   blue = "#2091f6",
+  violet = "#9167f5",
   selection = "#1b6649",
 }
 
@@ -49,8 +50,11 @@ local function apply_vibe_theme()
     Search = { fg = palette.background, bg = palette.cyan, bold = true },
     IncSearch = { fg = palette.background, bg = palette.blue, bold = true },
     VibeTitle = { fg = palette.green, bg = palette.background, bold = true },
+    VibeTitle1 = { fg = palette.green, bg = palette.background, bold = true },
+    VibeTitle2 = { fg = palette.cyan, bg = palette.background, bold = true },
+    VibeTitle3 = { fg = palette.blue, bg = palette.background, bold = true },
+    VibeTitle4 = { fg = palette.violet, bg = palette.background, bold = true },
     VibeHint = { fg = palette.muted, bg = palette.background },
-    VibeMetaLabel = { fg = palette.muted, bg = palette.background },
     VibeMetaValue = { fg = palette.foreground, bg = palette.background },
     VibeLink = { fg = palette.blue, bg = palette.background, underline = true },
   }
@@ -86,8 +90,6 @@ local welcome_content = {
   { "V I B E", "VibeTitle" },
   { "A minimalist terminal environment for vibe coding", "VibeHint" },
   { "", nil },
-  { "Choose a file in Directory to open in Editor", "VibeHint" },
-  { "", nil },
   { "Enter open  ·  Mouse enabled  ·  Ctrl-a h/j/k/l move", "VibeHint" },
   { "", nil },
   { "i edit  ·  Esc normal  ·  :w save  ·  :q close", "VibeHint" },
@@ -98,10 +100,10 @@ local welcome_content = {
 }
 
 local welcome_footer = {
-  { label = "Author", value = "Bo Zhao" },
-  { label = "Affiliation", value = "UW Humanistic GIS Lab" },
-  { label = "Website", value = "https://hgis.uw.edu", url = "https://hgis.uw.edu" },
-  { label = "Version", value = "0.1.0" },
+  { value = "Bo Zhao" },
+  { value = "UW Humanistic GIS Lab" },
+  { value = "https://hgis.uw.edu", url = "https://hgis.uw.edu" },
+  { value = "0.1.0" },
 }
 
 local welcome_buf
@@ -156,24 +158,9 @@ local function render_welcome()
     table.insert(lines, "")
   end
 
-  local footer_label_width = 0
-  local footer_value_width = 0
   for _, item in ipairs(welcome_footer) do
-    footer_label_width = math.max(footer_label_width, vim.fn.strdisplaywidth(item.label))
-    footer_value_width = math.max(footer_value_width, vim.fn.strdisplaywidth(item.value))
-  end
-  local footer_gap_width = 2
-  local footer_width = footer_label_width + footer_gap_width + footer_value_width
-  local footer_padding = math.max(0, math.floor((width - footer_width) / 2))
-  for _, item in ipairs(welcome_footer) do
-    local label_padding = footer_label_width - vim.fn.strdisplaywidth(item.label)
-    table.insert(
-      lines,
-      string.rep(" ", footer_padding + label_padding)
-        .. item.label
-        .. string.rep(" ", footer_gap_width)
-        .. item.value
-    )
+    local padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth(item.value)) / 2))
+    table.insert(lines, string.rep(" ", padding) .. item.value)
   end
 
   vim.bo[buf].readonly = false
@@ -185,19 +172,20 @@ local function render_welcome()
       vim.api.nvim_buf_add_highlight(buf, welcome_namespace, item[2], top + index - 1, 0, -1)
     end
   end
-  for index, item in ipairs(welcome_footer) do
-    local row = footer_start + index - 1
-    local label_padding = footer_label_width - vim.fn.strdisplaywidth(item.label)
-    local label_start = footer_padding + label_padding
-    local value_start = footer_padding + footer_label_width + footer_gap_width
+  local title_padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth("V I B E")) / 2))
+  for index, column in ipairs({ 0, 2, 4, 6 }) do
     vim.api.nvim_buf_add_highlight(
       buf,
       welcome_namespace,
-      "VibeMetaLabel",
-      row,
-      label_start,
-      label_start + #item.label
+      "VibeTitle" .. index,
+      top,
+      title_padding + column,
+      title_padding + column + 1
     )
+  end
+  for index, item in ipairs(welcome_footer) do
+    local row = footer_start + index - 1
+    local value_start = math.max(0, math.floor((width - vim.fn.strdisplaywidth(item.value)) / 2))
     vim.api.nvim_buf_add_highlight(
       buf,
       welcome_namespace,
@@ -218,7 +206,7 @@ local function render_welcome()
   vim.bo[buf].readonly = true
 end
 
-local animation_colors = { palette.green, palette.cyan, palette.blue }
+local animation_colors = { palette.green, palette.cyan, palette.blue, palette.violet }
 local animation_timer
 local animation_step = 0
 
@@ -247,20 +235,23 @@ local function start_title_animation()
       return
     end
 
-    local segment = math.floor(animation_step / steps_per_color) % #animation_colors
-    local next_segment = (segment + 1) % #animation_colors
     local progress = (animation_step % steps_per_color) / steps_per_color
     local eased = (1 - math.cos(math.pi * progress)) / 2
-    local color = interpolate_color(
-      animation_colors[segment + 1],
-      animation_colors[next_segment + 1],
-      eased
-    )
-    vim.api.nvim_set_hl(0, "VibeTitle", {
-      fg = color,
-      bg = palette.background,
-      bold = true,
-    })
+    local segment = math.floor(animation_step / steps_per_color) % #animation_colors
+    for index = 1, 4 do
+      local color_index = (segment + index - 1) % #animation_colors + 1
+      local next_color_index = color_index % #animation_colors + 1
+      local color = interpolate_color(
+        animation_colors[color_index],
+        animation_colors[next_color_index],
+        eased
+      )
+      vim.api.nvim_set_hl(0, "VibeTitle" .. index, {
+        fg = color,
+        bg = palette.background,
+        bold = true,
+      })
+    end
     animation_step = animation_step + 1
   end, { ["repeat"] = -1 })
   vim.g.vibe_title_timer = animation_timer
