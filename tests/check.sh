@@ -24,7 +24,13 @@ grep -Fq "gemini) PANE_TITLE='Gemini'" "$ROOT/bin/vibe"
 grep -Fq "opencode) PANE_TITLE='OpenCode'" "$ROOT/bin/vibe"
 grep -Fq "aider) PANE_TITLE='Aider'" "$ROOT/bin/vibe"
 grep -Fq 'Windows 10/11 (WSL2)' "$ROOT/README.md"
-grep -Fq 'v0.2.0' "$ROOT/nvim/vibe.lua"
+grep -Fq 'v0.2.1' "$ROOT/nvim/vibe.lua"
+grep -Fq "set -g status off" "$ROOT/tmux.conf"
+! grep -Fq "status on" "$ROOT/bin/vibe-ready"
+grep -Fq "@vibe_role 'Directory'" "$ROOT/bin/vibe"
+! grep -Fq "Directory · Favorites:" "$ROOT/bin/vibe"
+grep -Fq 'favorites) LABEL="Favorites"' "$ROOT/bin/vibe-favorite"
+grep -Fq 'directory) LABEL="Directory"' "$ROOT/bin/vibe-favorite"
 
 TMP_HOME=$(mktemp -d "${TMPDIR:-/tmp}/vibe-check.XXXXXX")
 trap 'rm -rf "$TMP_HOME"' EXIT HUP INT TERM
