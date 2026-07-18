@@ -7,6 +7,7 @@ elseif scenario == "modified" then
   vim.api.nvim_buf_set_lines(0, 0, -1, false, { "changed" })
   vim.cmd("silent! VibeClose")
   assert(vim.bo.filetype ~= "vibe-welcome", "modified buffer closed without force")
+  vim.bo.modified = false
 elseif scenario == "force" then
   vim.api.nvim_buf_set_lines(0, 0, -1, false, { "changed" })
   vim.cmd("VibeClose!")
