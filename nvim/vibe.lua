@@ -284,11 +284,13 @@ vim.api.nvim_create_user_command("VibeClose", function(opts)
     return
   end
   if vim.bo[current].modified and not opts.bang then
-    vim.api.nvim_echo(
-      { { "No write since last change (add ! to override)", "ErrorMsg" } },
-      true,
-      {}
-    )
+    if vim.fn.has("nvim-0.10") == 1 then
+      vim.api.nvim_echo(
+        { { "No write since last change (add ! to override)", "ErrorMsg" } },
+        true,
+        {}
+      )
+    end
     return
   end
 
