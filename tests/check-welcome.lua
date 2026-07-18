@@ -37,7 +37,11 @@ for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(0, -1, 0, -1, { details = tr
     break
   end
 end
-assert(has_website_link, "welcome Website is not linked")
+if vim.fn.has("nvim-0.10") == 1 then
+  assert(has_website_link, "welcome Website is not linked")
+else
+  assert(not has_website_link, "pre-0.10 Neovim unexpectedly created a URL extmark")
+end
 
 local initial_title_colors = {}
 for index = 1, 4 do

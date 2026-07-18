@@ -195,10 +195,15 @@ local function render_welcome()
       value_start + #item.value
     )
     if item.url then
-      vim.api.nvim_buf_set_extmark(buf, welcome_namespace, row, value_start, {
+      local link_mark = {
         end_col = value_start + #item.value,
-        url = item.url,
-      })
+      }
+      -- Hyperlink extmarks were added in Neovim 0.10. Keep the visual link
+      -- styling on older supported versions without passing an unknown key.
+      if vim.fn.has("nvim-0.10") == 1 then
+        link_mark.url = item.url
+      end
+      vim.api.nvim_buf_set_extmark(buf, welcome_namespace, row, value_start, link_mark)
     end
   end
   vim.bo[buf].modified = false
