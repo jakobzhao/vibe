@@ -103,7 +103,9 @@ Inside Vibe, press `Ctrl-a` and then:
 
 In Directory, `Enter` opens the selected file in Main. Press `f` or click the
 Directory pane title to toggle Favorites. Use `b a` to add an item and `b d` to
-remove one.
+remove one. In Main, `:q` closes the current file and returns to the Vibe welcome
+screen; `:q!` discards unsaved changes and returns there. Use `Ctrl-a Q` to stop
+the complete workspace.
 
 ## Update
 

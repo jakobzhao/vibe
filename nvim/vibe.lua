@@ -72,118 +72,150 @@ vim.api.nvim_create_autocmd("BufEnter", {
   end,
 })
 
+local welcome_content = {
+  { "V I B E", "VibeTitle" },
+  { "", nil },
+  { "Choose a file in the Directory panel", "VibeHint" },
+  { "", nil },
+  { "Enter open  ·  Mouse enabled  ·  Ctrl-a h/j/k/l move", "VibeHint" },
+  { "", nil },
+  { "i edit  ·  Esc normal  ·  :w save  ·  :q close", "VibeHint" },
+  { "", nil },
+  { "Mouse: click panels  ·  Drag borders to resize", "VibeHint" },
+  { "", nil },
+  { "Ctrl-a d detach  ·  Ctrl-a Q quit vibe", "VibeHint" },
+}
+
+local welcome_footer = {
+  { "Author       Bo Zhao", "VibeHint" },
+  { "Affiliation  UW Humanistic GIS Lab · https://hgis.uw.edu", "VibeHint" },
+  { "Version      0.1.0", "VibeHint" },
+}
+
+local welcome_buf
+
+local function ensure_welcome_buffer()
+  if welcome_buf and vim.api.nvim_buf_is_valid(welcome_buf) then
+    return welcome_buf
+  end
+
+  local current = vim.api.nvim_get_current_buf()
+  if vim.api.nvim_buf_get_name(current) == ""
+      and vim.bo[current].buftype == ""
+      and not vim.bo[current].modified then
+    welcome_buf = current
+  else
+    welcome_buf = vim.api.nvim_create_buf(false, true)
+  end
+
+  vim.bo[welcome_buf].buflisted = false
+  vim.bo[welcome_buf].buftype = "nofile"
+  vim.bo[welcome_buf].bufhidden = "hide"
+  vim.bo[welcome_buf].filetype = "vibe-welcome"
+  return welcome_buf
+end
+
+local function render_welcome()
+  local buf = ensure_welcome_buffer()
+  local win = vim.fn.bufwinid(buf)
+  if win == -1 then
+    return
+  end
+
+  local width = vim.api.nvim_win_get_width(win)
+  local height = vim.api.nvim_win_get_height(win)
+  local footer_gap = 2
+  local bottom_margin = 1
+  local content_height = math.max(1, height - #welcome_footer - footer_gap - bottom_margin)
+  local top = math.max(0, math.floor((content_height - #welcome_content) / 2))
+  local lines = {}
+  for _ = 1, top do
+    table.insert(lines, "")
+  end
+  for _, item in ipairs(welcome_content) do
+    local text = item[1]
+    local padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth(text)) / 2))
+    table.insert(lines, string.rep(" ", padding) .. text)
+  end
+
+  local footer_start = math.max(#lines + footer_gap, height - #welcome_footer - bottom_margin)
+  while #lines < footer_start do
+    table.insert(lines, "")
+  end
+
+  local footer_width = 0
+  for _, item in ipairs(welcome_footer) do
+    footer_width = math.max(footer_width, vim.fn.strdisplaywidth(item[1]))
+  end
+  local footer_padding = math.max(0, math.floor((width - footer_width) / 2))
+  for _, item in ipairs(welcome_footer) do
+    table.insert(lines, string.rep(" ", footer_padding) .. item[1])
+  end
+
+  vim.bo[buf].readonly = false
+  vim.bo[buf].modifiable = true
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.api.nvim_buf_clear_namespace(buf, -1, 0, -1)
+  for index, item in ipairs(welcome_content) do
+    if item[2] then
+      vim.api.nvim_buf_add_highlight(buf, -1, item[2], top + index - 1, 0, -1)
+    end
+  end
+  for index, item in ipairs(welcome_footer) do
+    if item[2] then
+      vim.api.nvim_buf_add_highlight(buf, -1, item[2], footer_start + index - 1, 0, -1)
+    end
+  end
+  vim.bo[buf].modified = false
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].readonly = true
+end
+
+local function show_welcome()
+  local buf = ensure_welcome_buffer()
+  vim.api.nvim_win_set_buf(0, buf)
+  vim.opt_local.number = false
+  vim.opt_local.signcolumn = "no"
+  vim.opt_local.wrap = false
+  render_welcome()
+  set_pane_title("Main")
+end
+
+vim.api.nvim_create_user_command("VibeClose", function(opts)
+  local current = vim.api.nvim_get_current_buf()
+  if current == welcome_buf or vim.bo[current].filetype == "vibe-welcome" then
+    vim.cmd(opts.bang and "quit!" or "quit")
+    return
+  end
+  if vim.bo[current].buftype ~= "" then
+    vim.cmd(opts.bang and "quit!" or "quit")
+    return
+  end
+  if vim.bo[current].modified and not opts.bang then
+    vim.api.nvim_err_writeln("No write since last change (add ! to override)")
+    return
+  end
+
+  show_welcome()
+  if vim.api.nvim_buf_is_valid(current) then
+    vim.api.nvim_buf_delete(current, { force = opts.bang })
+  end
+end, { bang = true })
+
+vim.cmd([[
+  cnoreabbrev <expr> q getcmdtype() ==# ':' && getcmdline() ==# 'q' ? 'VibeClose' : 'q'
+  cnoreabbrev <expr> quit getcmdtype() ==# ':' && getcmdline() ==# 'quit' ? 'VibeClose' : 'quit'
+]])
+
 vim.api.nvim_create_autocmd("VimEnter", {
   once = true,
   callback = function()
-    if vim.fn.argc() ~= 0 then
-      return
+    if vim.fn.argc() == 0 then
+      show_welcome()
     end
-
-    local content = {
-      { "V I B E", "VibeTitle" },
-      { "", nil },
-      { "Choose a file in the Directory panel", "VibeHint" },
-      { "", nil },
-      { "Enter open  ·  Mouse enabled  ·  Ctrl-a h/j/k/l move", "VibeHint" },
-      { "", nil },
-      { "i edit  ·  Esc normal  ·  :w save  ·  :q close", "VibeHint" },
-      { "", nil },
-      { "Mouse: click panels  ·  Drag borders to resize", "VibeHint" },
-      { "", nil },
-      { "Ctrl-a d detach  ·  Ctrl-a Q quit vibe", "VibeHint" },
-    }
-    local footer = {
-      { "Author       Bo Zhao", "VibeHint" },
-      { "Affiliation  UW Humanistic GIS Lab · https://hgis.uw.edu", "VibeHint" },
-      { "Version      0.1.0", "VibeHint" },
-    }
-
-    vim.bo.buftype = "nofile"
-    vim.bo.bufhidden = "wipe"
-    vim.bo.filetype = "vibe-welcome"
-    vim.opt_local.number = false
-    vim.opt_local.signcolumn = "no"
-    vim.opt_local.wrap = false
-
-    local welcome_buf = vim.api.nvim_get_current_buf()
-    local function render_welcome()
-      if not vim.api.nvim_buf_is_valid(welcome_buf) then
-        return
-      end
-
-      local win = vim.fn.bufwinid(welcome_buf)
-      if win == -1 then
-        return
-      end
-
-      local width = vim.api.nvim_win_get_width(win)
-      local height = vim.api.nvim_win_get_height(win)
-      local footer_gap = 2
-      local bottom_margin = 1
-      local content_height = math.max(1, height - #footer - footer_gap - bottom_margin)
-      local top = math.max(0, math.floor((content_height - #content) / 2))
-      local lines = {}
-      for _ = 1, top do
-        table.insert(lines, "")
-      end
-      for _, item in ipairs(content) do
-        local text = item[1]
-        local padding = math.max(0, math.floor((width - vim.fn.strdisplaywidth(text)) / 2))
-        table.insert(lines, string.rep(" ", padding) .. text)
-      end
-
-      local footer_start = math.max(#lines + footer_gap, height - #footer - bottom_margin)
-      while #lines < footer_start do
-        table.insert(lines, "")
-      end
-
-      local footer_width = 0
-      for _, item in ipairs(footer) do
-        footer_width = math.max(footer_width, vim.fn.strdisplaywidth(item[1]))
-      end
-      local footer_padding = math.max(0, math.floor((width - footer_width) / 2))
-      for _, item in ipairs(footer) do
-        table.insert(lines, string.rep(" ", footer_padding) .. item[1])
-      end
-
-      vim.bo[welcome_buf].readonly = false
-      vim.bo[welcome_buf].modifiable = true
-      vim.api.nvim_buf_set_lines(welcome_buf, 0, -1, false, lines)
-      vim.api.nvim_buf_clear_namespace(welcome_buf, -1, 0, -1)
-      for index, item in ipairs(content) do
-        if item[2] then
-          vim.api.nvim_buf_add_highlight(
-            welcome_buf,
-            -1,
-            item[2],
-            top + index - 1,
-            0,
-            -1
-          )
-        end
-      end
-      for index, item in ipairs(footer) do
-        if item[2] then
-          vim.api.nvim_buf_add_highlight(
-            welcome_buf,
-            -1,
-            item[2],
-            footer_start + index - 1,
-            0,
-            -1
-          )
-        end
-      end
-      vim.bo[welcome_buf].modified = false
-      vim.bo[welcome_buf].modifiable = false
-      vim.bo[welcome_buf].readonly = true
-    end
-
-    render_welcome()
-    vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
-      callback = render_welcome,
-    })
-
-    set_pane_title("Main")
   end,
+})
+
+vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
+  callback = render_welcome,
 })
