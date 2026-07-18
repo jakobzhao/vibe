@@ -14,6 +14,17 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - name: Install Neovim
+        run: |
+          if ! command -v nvim >/dev/null 2>&1; then
+            if command -v brew >/dev/null 2>&1; then
+              brew install neovim
+            else
+              sudo apt-get update
+              sudo apt-get install -y neovim
+            fi
+          fi
+          nvim --version | head -n 1
       - name: Check scripts
         run: ./tests/check.sh

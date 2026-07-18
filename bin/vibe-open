@@ -13,7 +13,7 @@ shell_quote() {
 
 if [ "$EDITOR_MODE" = nano ]; then
   if [ -z "$MAIN_PANE" ] || ! tmux display-message -p -t "$MAIN_PANE" '#{pane_id}' >/dev/null 2>&1; then
-    tmux display-message 'Main is not ready yet. Please try again in a moment.' 2>/dev/null || true
+    tmux display-message 'Editor is not ready yet. Please try again in a moment.' 2>/dev/null || true
     exit 1
   fi
 
@@ -31,18 +31,18 @@ if [ "$EDITOR_MODE" = nano ]; then
   done
   tmux send-keys -t "$MAIN_PANE" -l "$COMMAND"
   tmux send-keys -t "$MAIN_PANE" Enter
-  tmux set-option -p -t "$MAIN_PANE" @vibe_role "Main · $(basename "$1")"
-  tmux display-message -t "$MAIN_PANE" "Opened in Main: $(basename "$1")" 2>/dev/null || true
+  tmux set-option -p -t "$MAIN_PANE" @vibe_role "Editor · $(basename "$1")"
+  tmux display-message -t "$MAIN_PANE" "Opened in Editor: $(basename "$1")" 2>/dev/null || true
   exit 0
 fi
 
 if [ -z "$SOCKET" ] || [ ! -S "$SOCKET" ]; then
-  tmux display-message 'Main is not ready yet. Please try again in a moment.' 2>/dev/null || true
+  tmux display-message 'Editor is not ready yet. Please try again in a moment.' 2>/dev/null || true
   exit 1
 fi
 
 nvim --server "$SOCKET" --remote "$@"
 
 if [ -n "$MAIN_PANE" ]; then
-  tmux display-message -t "$MAIN_PANE" "Opened in Main: $(basename "$1")" 2>/dev/null || true
+  tmux display-message -t "$MAIN_PANE" "Opened in Editor: $(basename "$1")" 2>/dev/null || true
 fi

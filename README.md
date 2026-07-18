@@ -4,22 +4,24 @@ Vibe turns a terminal into a small, persistent workspace for coding with AI agen
 One command opens a file browser, an editor, and one or more agents in a tmux session:
 
 ```text
-┌──────────────────┬────────────────────────────────────┐
-│ Directory        │ Main editor                        │
-├──────────────────┤                                    │
+┌────────┬─────────┬────────────────────────────────────┐
+│ Shell   │ Direct.│ Editor                             │
+├────────┴─────────┤                                    │
 │ Codex / agent    │                                    │
 └──────────────────┴────────────────────────────────────┘
 ```
 
 It is intentionally lightweight: POSIX shell scripts coordinate tmux, Yazi, and
-Neovim. Sessions survive terminal disconnects, files open from Yazi into the main
-editor, and any CLI agent can run in the lower-left pane.
+Neovim. Sessions survive terminal disconnects, files open from Yazi into the
+editor, the upper-left Shell uses a minimal `>` prompt for project commands, and any CLI agent can
+run in the lower-left pane.
 
 ## Features
 
 - Persistent project workspaces powered by tmux
 - Yazi directory browser with reusable favorites
-- Neovim or Nano as the main editor
+- Ready-to-use project shell beside the directory browser
+- Neovim or Nano as the Editor
 - Codex by default, with support for Claude or any interactive CLI agent
 - Multiple agents in one workspace
 - One-command Git worktrees for isolated tasks
@@ -84,6 +86,7 @@ Set defaults with environment variables:
 export VIBE_AGENT=claude
 export VIBE_EDITOR=nano
 export VIBE_COMPACT_UI=0  # restore native Codex/Neovim status bars
+export VIBE_ANIMATIONS=0  # disable the subtle VIBE title animation
 ```
 
 Set these variables before running the installer too; validation and automatic
@@ -99,9 +102,11 @@ Inside Vibe, press `Ctrl-a` and then:
 | `r` | Reload tmux configuration |
 | `|` / `-` | Split the current pane |
 
-In Directory, `Enter` opens the selected file in Main. Press `f` or click the
+In Directory, `Enter` opens the selected file in Editor. Press `f` or click the
 Directory pane title to toggle Favorites. Use `b a` to add an item and `b d` to
-remove one.
+remove one. In Editor, `:q` closes the current file and returns to the Vibe welcome
+screen; `:q!` discards unsaved changes and returns there. Use `Ctrl-a Q` to stop
+the complete workspace.
 
 ## Update
 
@@ -118,7 +123,7 @@ The repository is the configuration. Fork it and edit:
 
 - `tmux.conf` for layout controls and colors
 - `yazi/` for browsing and file actions
-- `nvim/vibe.lua` for the main editor
+- `nvim/vibe.lua` for the Editor
 - `ghostty/termius-dark.ghostty` for the optional terminal profile
 
 Vibe keeps user-created favorites outside the repository at

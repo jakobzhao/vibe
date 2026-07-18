@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+set -eu
+
+USER_SHELL=${SHELL:-/bin/sh}
+SHELL_NAME=$(basename -- "$USER_SHELL")
+
+case "$SHELL_NAME" in
+  zsh)
+    exec env PS1='> ' PROMPT='> ' RPROMPT= "$USER_SHELL" -f -i
+    ;;
+  bash)
+    exec env PS1='> ' "$USER_SHELL" --noprofile --norc -i
+    ;;
+  fish)
+    exec "$USER_SHELL" --no-config --interactive --init-command \
+      'function fish_prompt; printf "> "; end; function fish_right_prompt; end'
+    ;;
+  *)
+    exec env PS1='> ' "$USER_SHELL" -i
+    ;;
+esac
