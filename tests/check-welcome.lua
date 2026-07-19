@@ -65,7 +65,7 @@ assert(section_color == subtitle_color, "welcome headings do not share the pale 
 local values = {
   "Bo Zhao  ·  UW Humanistic GIS Lab",
   "https://hgis.uw.edu",
-  "v0.2.3",
+  "v0.3.0",
 }
 for _, value in ipairs(values) do
   local found_column

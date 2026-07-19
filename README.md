@@ -19,7 +19,7 @@ The project Shell uses a minimal `>` prompt, and any CLI agent can run below it.
 ## Features
 
 - Persistent project workspaces powered by tmux
-- Yazi directory browser with reusable favorites
+- Yazi directory browser rooted in the active project
 - Preserved Shell and Explorer tabs sharing one focused pane
 - Neovim or Nano as the Editor
 - Codex by default, with named support for Claude, Gemini, OpenCode, and Aider
@@ -146,10 +146,9 @@ Inside Vibe, press `Ctrl-a` and then:
 
 Click `Shell` or `Explorer` in the upper-left pane title to switch tabs; only
 the selected tab is visible, and both keep their running state. In Explorer,
-`Enter` opens the selected file in Editor. Press `f` to toggle Favorites. Use
-`b a` to add an item and `b d` to remove one. In Editor, `:q` closes the current file and returns to the Vibe welcome
-screen; `:q!` discards unsaved changes and returns there. Use `Ctrl-a Q` to stop
-the complete workspace.
+`Enter` opens the selected file in Editor. In Editor, `:q` closes the current
+file and returns to the Vibe welcome screen; `:q!` discards unsaved changes and
+returns there. Use `Ctrl-a Q` to stop the complete workspace.
 
 ## Update
 
@@ -168,10 +167,6 @@ The repository is the configuration. Fork it and edit:
 - `yazi/` for browsing and file actions
 - `nvim/vibe.lua` for the Editor
 - `ghostty/termius-dark.ghostty` for the optional terminal profile
-
-Vibe keeps user-created favorites outside the repository at
-`~/.local/share/vibe/favorites` by default. Override this with
-`VIBE_FAVORITES_DIR`.
 
 ## Contributing
 
