@@ -101,6 +101,15 @@ install_link() {
   say LINK "$TARGET -> $SOURCE"
 }
 
+remove_legacy_link() {
+  TARGET=$1
+  LEGACY_SOURCE=$2
+  if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$LEGACY_SOURCE" ]; then
+    unlink "$TARGET"
+    say REMOVE "$TARGET (obsolete)"
+  fi
+}
+
 append_once() {
   LINE=$1
   FILE=$2
@@ -318,9 +327,10 @@ configure_paths() {
 
 install_files() {
   install_link "$VIBE_ROOT/tmux.conf" "$HOME/.tmux.conf"
-  for NAME in vibe vibe-favorite vibe-loading vibe-main vibe-open vibe-ready vibe-shell vibe-tab install-vibe; do
+  for NAME in vibe vibe-loading vibe-main vibe-open vibe-ready vibe-shell vibe-tab install-vibe; do
     install_link "$BIN_SOURCE/$NAME" "$HOME/bin/$NAME"
   done
+  remove_legacy_link "$HOME/bin/vibe-favorite" "$BIN_SOURCE/vibe-favorite"
   install_link "$VIBE_ROOT/scripts/restore-if-saved.sh" "$HOME/bin/vibe-restore"
 }
 
@@ -335,7 +345,7 @@ validate() {
     fi
   done
 
-  sh -n "$BIN_SOURCE/vibe" "$BIN_SOURCE/vibe-favorite" "$BIN_SOURCE/vibe-loading" \
+  sh -n "$BIN_SOURCE/vibe" "$BIN_SOURCE/vibe-loading" \
     "$BIN_SOURCE/vibe-main" "$BIN_SOURCE/vibe-open" "$BIN_SOURCE/vibe-ready" \
     "$BIN_SOURCE/vibe-shell" "$BIN_SOURCE/vibe-tab" "$BIN_SOURCE/install-vibe" \
     "$VIBE_ROOT/scripts/restore-if-saved.sh" || FAILED=1

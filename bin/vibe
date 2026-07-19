@@ -20,8 +20,6 @@ shell_quote() {
 
 VIBE_BIN_DIR=$(resolve_script_dir "$0")
 VIBE_ROOT=$(CDPATH= cd -- "$VIBE_BIN_DIR/.." && pwd -P)
-FAVORITES_DIR=${VIBE_FAVORITES_DIR:-$HOME/.local/share/vibe/favorites}
-mkdir -p "$FAVORITES_DIR"
 
 usage() {
   cat <<'EOF'
@@ -246,8 +244,6 @@ tmux set-environment -t "$SESSION" VIBE_ANIMATIONS "$VIBE_ANIMATIONS"
 tmux set-environment -t "$SESSION" YAZI_CONFIG_HOME "$VIBE_ROOT/yazi"
 tmux set-environment -t "$SESSION" EDITOR "$VIBE_BIN_DIR/vibe-open"
 tmux set-environment -t "$SESSION" VIBE_PROJECT_DIR "$DIR"
-tmux set-environment -t "$SESSION" VIBE_FAVORITES_DIR "$FAVORITES_DIR"
-tmux set-environment -t "$SESSION" VIBE_FAVORITE_HELPER "$VIBE_BIN_DIR/vibe-favorite"
 
 tmux select-pane -t "$MAIN_PANE" -T 'Editor'
 tmux select-pane -t "$DIR_PANE" -T 'Explorer'
@@ -265,7 +261,7 @@ tmux set-option -t "$SESSION" @vibe_cockpit_window "$COCKPIT_WINDOW"
 tmux set-option -t "$SESSION" @vibe_directory_pane "$DIR_PANE"
 tmux set-option -t "$SESSION" @vibe_shell_pane "$SHELL_PANE"
 MAIN_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_COMPACT_UI=$(shell_quote "$VIBE_COMPACT_UI") VIBE_ANIMATIONS=$(shell_quote "$VIBE_ANIMATIONS") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_NVIM_CONFIG=$(shell_quote "$VIBE_ROOT/nvim/vibe.lua") $(shell_quote "$VIBE_BIN_DIR/vibe-main")"
-DIRECTORY_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_DIRECTORY_PANE=$(shell_quote "$DIR_PANE") VIBE_PROJECT_DIR=$(shell_quote "$DIR") VIBE_FAVORITES_DIR=$(shell_quote "$FAVORITES_DIR") VIBE_FAVORITE_HELPER=$(shell_quote "$VIBE_BIN_DIR/vibe-favorite") YAZI_CONFIG_HOME=$(shell_quote "$VIBE_ROOT/yazi") EDITOR=$(shell_quote "$VIBE_BIN_DIR/vibe-open") yazi ."
+DIRECTORY_COMMAND="exec env VIBE_EDITOR=$(shell_quote "$VIBE_EDITOR") VIBE_NVIM_SOCKET=$(shell_quote "$SOCKET") VIBE_MAIN_PANE=$(shell_quote "$MAIN_PANE") VIBE_DIRECTORY_PANE=$(shell_quote "$DIR_PANE") VIBE_PROJECT_DIR=$(shell_quote "$DIR") YAZI_CONFIG_HOME=$(shell_quote "$VIBE_ROOT/yazi") EDITOR=$(shell_quote "$VIBE_BIN_DIR/vibe-open") yazi ."
 SHELL_COMMAND="exec $(shell_quote "$VIBE_BIN_DIR/vibe-shell")"
 tmux send-keys -t "$MAIN_PANE" -l "$MAIN_COMMAND"
 tmux send-keys -t "$MAIN_PANE" Enter

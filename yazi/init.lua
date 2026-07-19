@@ -1,6 +1,3 @@
--- Vibe Favorites is intentionally configured through environment variables in
--- bin/vibe, so the same Yazi config remains usable outside a Vibe session.
-
 -- Keep Vibe's compact Explorer pane visually minimal.
 require("no-status"):setup()
 
@@ -29,7 +26,6 @@ function Header:cwd()
 
 	local path = tostring(self._current.cwd)
 	local shown = visible_path(path, os.getenv("VIBE_PROJECT_DIR"))
-		or visible_path(path, os.getenv("VIBE_FAVORITES_DIR"), "Favorites")
 		or ya.readable_path(path)
 	local text = shown .. self:flags()
 	return ui.Span(ui.truncate(text, { max = max, rtl = true })):style(th.mgr.cwd)

@@ -12,8 +12,7 @@ end
 return {
 	entry = function()
 		local cwd = current_directory()
-		if at_boundary(cwd, os.getenv("VIBE_PROJECT_DIR"))
-			or at_boundary(cwd, os.getenv("VIBE_FAVORITES_DIR")) then
+		if at_boundary(cwd, os.getenv("VIBE_PROJECT_DIR")) then
 			return
 		end
 		ya.emit("leave", {})

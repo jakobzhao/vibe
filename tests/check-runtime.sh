@@ -41,7 +41,6 @@ export HOME PATH
 
 VIBE_NO_ATTACH=1 \
 VIBE_ANIMATIONS=0 \
-VIBE_FAVORITES_DIR="$TEST_HOME/favorites" \
   "$ROOT/bin/vibe" -a codex -a 'opencode -f /dev/null' "$TEST_PROJECT"
 
 TRIES=0
@@ -99,10 +98,5 @@ tmux run-shell -t "$SHELL_PANE" \
 [ "$(tmux display-message -p -t "$SHELL_PANE" '#{window_id}')" != "$COCKPIT_WINDOW" ]
 [ "$(tmux display-message -p -t "$DIRECTORY_PANE" '#{pane_pid}')" = "$DIRECTORY_PID" ]
 [ "$(tmux display-message -p -t "$SHELL_PANE" '#{pane_pid}')" = "$SHELL_PID" ]
-
-VIBE_DIRECTORY_PANE="$DIRECTORY_PANE" \
-VIBE_FAVORITES_DIR="$TEST_HOME/favorites" \
-  "$ROOT/bin/vibe-favorite" title favorites
-[ "$(tmux show-option -pqv -t "$DIRECTORY_PANE" @vibe_role)" = Favorites ]
 
 printf '%s\n' 'Vibe multi-agent runtime check passed.'
